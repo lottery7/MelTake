@@ -1,5 +1,4 @@
-## DOCUMENTATION
-> ## include
+> # include
 ### track_structure.hpp
 Конструкторы, операторы и методы для структуры трека
 * сейчас только конструкторы, операторы= и объявление методов `play_track` + `stop_track` + `edit_track`
@@ -11,7 +10,7 @@
 * сейчас только конструкторы, операторы= и дефолтный вариант настроек(светлая тема) + обявление методов `set_theme`, `set_visualisation`
 ### fwd.hpp
 В данный момент это удобный для включения в другие файлы hpp-ник со всеми структурами
-> ## src
+> # src
 ### track_functions.cpp
 Реализация всех функций трека - `play_track`, `stop_track`, `back_track`, `forward_track`,  `repeat_track`, `mix_track`, `edit_track`
 
