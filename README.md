@@ -1,15 +1,16 @@
 > # include
 ### track_structure.hpp
-Конструкторы, операторы и методы для структуры трека
+Конструкторы, операторы и методы для структуры трека. Трек хранится по имени и по файловому пути.
 * сейчас только конструкторы, операторы= и объявление методов `play_track` + `stop_track` + `edit_track`
 ### playlist_structure.hpp
 Конструкторы, операторы и методы для структуры плейлиста
-* сейчас только конструкторы и операторы=
+* сейчас только конструкторы, операторы=, методы `add_new_track_to_playlist`, `add_old_track_to_playlist`, `delete_track_from_playlist`
 ### settings_structure.hpp
 Конструкторы, операторы и методы для структуры настроек
-* сейчас только конструкторы, операторы= и дефолтный вариант настроек(светлая тема) + обявление методов `set_theme`, `set_visualisation`
+* конструкторы, операторы= и дефолтный вариант настроек(светлая тема), методы `set_theme`, `set_visualisation` (вроде большего и не надо)
 ### fwd.hpp
-В данный момент это удобный для включения в другие файлы hpp-ник со всеми структурами
+В данный момент это удобный для включения в другие файлы hpp-ник со всеми структурами, также здесь прописана структура music_base:
+Методы `beginning_setup`, `assert_or_create_trackdata_file`, `upload_info_from_trackdata_file`, `find_playlist`, `app_view` и немножко ошибок, которые могут кинуться в процессе программы
 > # src
 ### track_functions.cpp
 Реализация всех функций трека - `play_track`, `stop_track`, `back_track`, `forward_track`,  `repeat_track`, `mix_track`, `edit_track`
@@ -30,7 +31,7 @@
 
 * сейчас только базовые функции `play` + `stop` + `edit_track`
 ### playlist_functions.cpp
-Реализация всех функций плейлиста - `play_playlist`, `stop_playlist`, `repeat_playlist`, `mix_playlist`, `edit_playlist`, `create_playlist`, `delete_playlist`, `add_tracks`, `delete_tracks`, `edit_playlist_name`, `edit_playlist_cover`
+Реализация всех функций плейлиста - `play_playlist`, `stop_playlist`, `repeat_playlist`, `mix_playlist`, `edit_playlist`, `create_playlist`, `delete_playlist`, `add_new_track_to_playlist`, `add_old_track_to_playlist`, `delete_track_from_playlist`, `edit_playlist_name`, `edit_playlist_cover`
 
 `play_playlist` - проигрывание плейлиста по порядку добавленных треков
 
@@ -41,8 +42,9 @@
 `mix_playlist` - играть весь плейлист в перемешанном порядке
 
 `edit_playlist`- изменить данные плейлиста (название, обложку, состав) (пользователь будет видеть это как список функций, которые он может выбрать - изменить название, изменить обложку, добавить треки, удалить треки)
-- `add_tracks` - пользователь может добавить от 1 до n треков
-- `delete_tracks` - пользователь может удалить от 1 до n треков
+- `add_new_track_to_playlist` - пользователь может добавить 1 трек
+- `add_old_track_to_playlist` - используется при запуске программы для добавления в систему треки, загруженные ранее
+- `delete_track_from_playlist` - пользователь может удалить 1 трек
 - `edit_playlist_name` - изменить название плейлиста
 - `edit_playlist_cover` - поменять картинку плелиста на новую, загруженную с устройства
 
@@ -50,7 +52,7 @@
 
 `delete_playlist` - удалить какой-то плейлист и все данные в нем (на компьютере, конечно же, не удаляется)
 
-* сейчас функций нет
+* сейчас написаны `add_new_track_to_playlist`, `add_old_track_to_playlist`, `delete_track_from_playlist`
 ### settings_functions.cpp
 Реализация всех функций настроек - `set_theme`, `set_visualisation`
 
@@ -58,7 +60,7 @@
 
 `set_visualisation` - выбрать вариант визуализации (базовую или посложнее)
 
-* сейчас возможно только откатиться к дефолтному варианту настроек(светлая тема) - метод определен в hpp-нике
+* все методы реализованы
 
 ### main.cpp
-пока пусто
+Необходимые действия для запуска программы - закачка ранее загруженных треков в соответствующие плейлисты (`user_music_base.beginning_setup`, `user_music_base.upload_info_from_trackdata_file`) + просмотр, правильно ли все загрузилось (`app_view`)
