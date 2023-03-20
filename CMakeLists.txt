@@ -5,8 +5,8 @@ set(CMAKE_CXX_STANDARD 17)
 
 include_directories(.)
 
-add_executable(audio_app fwd.hpp
-        playlist_functions.cpp playlist_structure.hpp
-        track_functions.cpp track_structure.hpp
-        settings_functions.cpp settings_structure.hpp
-        main.cpp)
+add_executable(audio_app include/fwd.hpp
+        src/playlist_functions.cpp include/playlist_structure.hpp
+        src/track_functions.cpp include/track_structure.hpp
+        src/settings_functions.cpp include/settings_structure.hpp
+        src/main.cpp src/music_base.cpp)
