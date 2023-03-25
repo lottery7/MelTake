@@ -4,12 +4,8 @@
 #include <iostream>
 
 namespace audio_app {
-struct settings {
-    void back_to_default() {
-        theme_type = 0;
-        visualisation_type = 0;
-    }
 
+struct settings {
     int theme_type = 0;
     int visualisation_type = 0;
 
@@ -23,8 +19,10 @@ struct settings {
         back_to_default();
     };
 
+    void back_to_default();
     void set_theme(int type);
     void set_visualisation(int type);
 };
+
 }  // namespace audio_app
 #endif  // SETTINGS_STRUCTURE_HPP
