@@ -2,6 +2,9 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QMediaPlayer>
+#include <QMediaPlaylist>
+#include <QStandardItemModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -16,14 +19,21 @@ public:
     ~MainWindow();
 
 private slots:
-    void on_ui_start_stop_button_clicked();
+    void on_load_tracks_button_clicked();
 
-    void on_ui_next_track_button_clicked();
+    void on_next_trak_button_clicked();
 
-    void on_ui_previou_track_button_clicked();
+    void on_previous_track_button_clicked();
+
+    void on_start_stop_button_clicked();
 
 private:
     Ui::MainWindow *ui;
-};
 
+    //возможно стоит вынести это в отдельный заголовочный файл, посмотрим по дальнейшей реализации
+    QStandardItemModel *m_playlist_model;
+    QMediaPlaylist *m_playlist;
+    QMediaPlayer *m_player;
+
+};
 #endif // MAINWINDOW_H
