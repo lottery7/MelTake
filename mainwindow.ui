@@ -6,71 +6,91 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>395</width>
-    <height>600</height>
+    <width>854</width>
+    <height>599</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QWidget" name="verticalLayoutWidget">
+   <widget class="QPushButton" name="load_tracks_button">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>190</y>
-      <width>341</width>
-      <height>201</height>
+      <x>40</x>
+      <y>10</y>
+      <width>331</width>
+      <height>51</height>
      </rect>
     </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <layout class="QHBoxLayout" name="ui_current_track_panel">
-       <item>
-        <widget class="QLabel" name="ui_current_cover">
-         <property name="text">
-          <string>Track_Img</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QLabel" name="ui_current_track">
-         <property name="text">
-          <string>Track_Name</string>
-         </property>
-         <property name="wordWrap">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="Control_Panel">
-       <item>
-        <widget class="QPushButton" name="ui_previous_track_button">
-         <property name="text">
-          <string>Last_Track_Button</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="ui_start_stop_button">
-         <property name="text">
-          <string>Start-Stop-Button</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="ui_next_track_button">
-         <property name="text">
-          <string>Next_Track_Button</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
+    <property name="text">
+     <string>load_tracks_button</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="previous_track_button">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>250</y>
+      <width>211</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>previous_track_button</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="start_stop_button">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>200</y>
+      <width>211</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>start_stop_button</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="next_trak_button">
+    <property name="geometry">
+     <rect>
+      <x>530</x>
+      <y>250</y>
+      <width>211</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>next_trak_button</string>
+    </property>
+   </widget>
+   <widget class="QTableView" name="playlist_tabel_view">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>320</y>
+      <width>671</width>
+      <height>251</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="current_track_label">
+    <property name="geometry">
+     <rect>
+      <x>70</x>
+      <y>90</y>
+      <width>331</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>TextLabel</string>
+    </property>
    </widget>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
