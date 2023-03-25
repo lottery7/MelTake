@@ -1,28 +1,41 @@
-#ifndef SETTINGS_STRUCTURE_HPP
-#define SETTINGS_STRUCTURE_HPP
+#ifndef TRACK_STRUCTURE_HPP
+#define TRACK_STRUCTURE_HPP
 
 #include <iostream>
+#include <utility>
 
 namespace audio_app {
 
-struct settings {
-    int theme_type = 0;
-    int visualisation_type = 0;
+struct track {
+    std::string m_track_name;
+    std::string m_track_path;
 
-    settings() = default;
-    settings(const settings &) = default;
-    settings &operator=(const settings &) = default;
-    settings(settings &&) = default;
-    settings &operator=(settings &&) = default;
+    track() : m_track_name() {
+    }
 
-    ~settings() {
-        back_to_default();
-    };
+    explicit track(std::string track_name, std::string track_path)
+        : m_track_name(std::move(track_name)),
+          m_track_path(std::move(track_path)) {
+    }
 
-    void back_to_default();
-    void set_theme(int type);
-    void set_visualisation(int type);
+    track(track &&another) noexcept = default;
+
+    track &operator=(track &&another) noexcept = default;
+
+    track(const track &another) = default;
+
+    track &operator=(const track &) = delete;
+
+    ~track() = default;
+
+    //    friend bool operator==(const track &lhs, const track &rhs);
+
+    void play_track(const track &track_);
+
+    void stop_track(const track &track_);
+
+    void edit_track(track &track_);
 };
 
 }  // namespace audio_app
-#endif  // SETTINGS_STRUCTURE_HPP
+#endif  // TRACK_STRUCTURE_HPP
