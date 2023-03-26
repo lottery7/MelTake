@@ -25,7 +25,11 @@ private slots:
 
     void on_previous_track_button_clicked();
 
-    void on_start_stop_button_clicked();
+    void on_play_pause_button_clicked();
+
+    void on_mute_button_clicked();
+
+    void on_volume_slider_valueChanged(int value);
 
 private:
     Ui::MainWindow *ui;
@@ -34,6 +38,18 @@ private:
     QStandardItemModel *m_playlist_model;
     QMediaPlaylist *m_playlist;
     QMediaPlayer *m_player;
+
+
+    // возможно в другое место перенести пока не знаю ? спросить!
+    int last_volume_slider_value=5;
+    bool is_muting=false;
+
+    // Это тоже перенести! Это параметер который должен сохраняться в settings
+    // Такие значения надо помечать по-особому, к примеру stored_ - сохраненный
+
+    // Или лучше пометить from_settings?
+    int stored_volume_value = 60;
+
 
 };
 #endif // MAINWINDOW_H
