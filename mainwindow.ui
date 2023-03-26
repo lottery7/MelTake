@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>854</width>
-    <height>599</height>
+    <width>1059</width>
+    <height>937</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -40,7 +40,7 @@
      <string>previous_track_button</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="start_stop_button">
+   <widget class="QPushButton" name="play_pause_button">
     <property name="geometry">
      <rect>
       <x>300</x>
@@ -50,7 +50,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>start_stop_button</string>
+     <string>play_pause_button</string>
     </property>
     <property name="checkable">
      <bool>true</bool>
@@ -74,8 +74,8 @@
      <rect>
       <x>70</x>
       <y>320</y>
-      <width>671</width>
-      <height>251</height>
+      <width>1051</width>
+      <height>541</height>
      </rect>
     </property>
    </widget>
@@ -90,6 +90,51 @@
     </property>
     <property name="text">
      <string>TextLabel</string>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="track_progress_bar">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>160</y>
+      <width>1091</width>
+      <height>23</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>0</number>
+    </property>
+   </widget>
+   <widget class="QSlider" name="volume_slider">
+    <property name="geometry">
+     <rect>
+      <x>550</x>
+      <y>50</y>
+      <width>381</width>
+      <height>61</height>
+     </rect>
+    </property>
+    <property name="value">
+     <number>60</number>
+    </property>
+    <property name="orientation">
+     <enum>Qt::Horizontal</enum>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="mute_button">
+    <property name="geometry">
+     <rect>
+      <x>460</x>
+      <y>70</y>
+      <width>80</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>mute</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
