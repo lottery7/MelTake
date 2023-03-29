@@ -31,13 +31,23 @@ private slots:
 
     void on_volume_slider_valueChanged(int value);
 
+    void on_random_mode_button_clicked();
+
+    void on_loop_mode_button_clicked();
+
+    void on_track_loop_mode_button_clicked();
+
 private:
     Ui::MainWindow *ui;
 
-    //возможно стоит вынести это в отдельный заголовочный файл, посмотрим по дальнейшей реализации
-    QStandardItemModel *m_playlist_model;
-    QMediaPlaylist *m_playlist;
-    QMediaPlayer *m_player;
+    // возможно стоит вынести это в отдельный заголовочный файл, посмотрим по дальнейшей реализации
+
+
+    QMediaPlayer *m_player;    // пригрыватель
+
+    QMediaPlaylist *m_playlist;    // структура с обектами, которые воспроизводятся в проигрыватели
+
+    QStandardItemModel *m_playlist_model;   // структура необходимая для отображения треков в таблице треков
 
 
     // возможно в другое место перенести пока не знаю ? спросить!
