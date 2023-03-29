@@ -14,14 +14,21 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
+    // делает окно слегка прозрачным
+    setWindowOpacity( 0.95 );
+    // для красивой реализации нужно будет добавить размытие
+
+
+
+
     m_playlist_model = new QStandardItemModel(this);
     m_playlist_model->setHorizontalHeaderLabels(QStringList()<<tr("track_name")<<tr("path")); // заменить тупь на трек
     ui->playlist_tabel_view->setModel(m_playlist_model);
     ui->playlist_tabel_view->hideColumn(1);
-    ui->playlist_tabel_view->horizontalHeader()->setVisible(false); // спрятот заголовки столбцов
-    ui->playlist_tabel_view->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->playlist_tabel_view->setSelectionMode(QAbstractItemView::SingleSelection);
-//        ui->playlist_tabel_view->setEditTriggers(QAbstractItemView::NoEditTriggers);   /// Отключаем редактирование
+    ui->playlist_tabel_view->horizontalHeader()->setVisible(false); // спрятать заголовки столбцов
+    ui->playlist_tabel_view->setSelectionBehavior(QAbstractItemView::SelectRows);   /// Разрешаем выбирать строки
+    ui->playlist_tabel_view->setSelectionMode(QAbstractItemView::SingleSelection);   /// Разрешаем выбирать только один трек
+    ui->playlist_tabel_view->setEditTriggers(QAbstractItemView::NoEditTriggers);   /// Отключаем редактирование
     ui->playlist_tabel_view->horizontalHeader()->setStretchLastSection(true);
 
     m_player = new QMediaPlayer(this);
@@ -30,18 +37,54 @@ MainWindow::MainWindow(QWidget *parent)
     m_player->setVolume(stored_volume_value);
     ui->volume_slider->setValue(stored_volume_value);
 
-    m_playlist->setPlaybackMode(QMediaPlaylist::Loop);  // Устанавливаем циклический режим проигрывания плейлиста
+    m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
 
-    // При даблклике по треку в таблице устанавливаем трек в плейлисте
-    connect(ui->playlist_tabel_view, &QTableView::doubleClicked, [this](const QModelIndex &index){
+
+
+    /// Прописать получение деыолтного плейлиста из уже знакомых треков из прошлого открытия приложения
+    ///
+    //    //void MainWindow::on_load_tracks_button_clicked()
+    //    {
+    //        ui->statusbar->showMessage("load_tracks_button_clicked");
+    //        QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("Audio Files (*.mp3)"));
+    //    //    for (auto u:){
+    //           /// Это тебе!
+    //    //    }
+    //        //// Передать полученные paths
+    //        foreach (QString filePath, files) {
+    //            // Добавить проверку на то, что трек уже находится в листе
+    //            QList<QStandardItem *> items;
+    //            items.append(new QStandardItem(QDir(filePath).dirName()));
+    //            items.append(new QStandardItem(filePath));
+    //            m_playlist_model->appendRow(items);
+    //            m_playlist->addMedia(QUrl(filePath));
+    //        }
+    //    }
+
+
+
+
+    // при дабл-клике по треку устанавливаем его в плейлисте
+    connect(ui->playlist_tabel_view, &QTableView::doubleClicked, m_playlist, [this](const QModelIndex &index){
         m_playlist->setCurrentIndex(index.row());
     });
 
-
     // установить название выбранного трека
-    connect(m_playlist, &QMediaPlaylist::currentIndexChanged, [this](int index){
+    connect(m_playlist, &QMediaPlaylist::currentIndexChanged, ui->current_track_label, [this](int index){
         ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(index, 0)).toString());
     });
+
+    // изменение progress_bar при смене трека
+    connect(m_player,&QMediaPlayer::durationChanged, ui->track_progress_bar,[&] (qint64 duration){
+        ui->track_progress_bar->setMaximum(duration);
+    });
+
+    // изменение progress_bar при проигрывание
+    connect(m_player,&QMediaPlayer::positionChanged, ui->track_progress_bar,[&] (qint64 position){
+        ui->track_progress_bar->setValue(position);
+    });
+
+//    connect(ui->track_progress_bar,&Q)
 
 }
 
@@ -59,34 +102,45 @@ void MainWindow::on_load_tracks_button_clicked()
     ui->statusbar->showMessage("load_tracks_button_clicked");
     QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("Audio Files (*.mp3)"));
 
-    //// Передать полученные пaths
+//    for (auto u:){
+       /// Это тебе!
+//    }
 
-    // Далее устанавливаем данные по именам и пути к файлам
-    // в плейлист и таблицу отображающую плейлист
-    // Добавить проверку на то, что трек уже находится в листе
+
+
+    //// Передать полученные paths
     foreach (QString filePath, files) {
+        // Добавить проверку на то, что трек уже находится в листе
         QList<QStandardItem *> items;
         items.append(new QStandardItem(QDir(filePath).dirName()));
         items.append(new QStandardItem(filePath));
         m_playlist_model->appendRow(items);
         m_playlist->addMedia(QUrl(filePath));
     }
-
-
-
-
 }
+
 
 void MainWindow::on_next_trak_button_clicked()
 {
     ui->statusbar->showMessage("next_track_button_clicked");
-//    m_player.
+    if (m_playlist->nextIndex()==m_playlist->currentIndex()){
+        m_player->setPosition(0);
+    }
+    else{
+        m_playlist->next();
+    }
 }
 
 
 void MainWindow::on_previous_track_button_clicked()
 {
     ui->statusbar->showMessage("previou_track_button_clicked");
+    if (m_playlist->previousIndex()==m_playlist->currentIndex()){
+        m_player->setPosition(0);
+    }
+    else{
+        m_playlist->previous();
+    }
 }
 
 
@@ -96,8 +150,9 @@ void MainWindow::on_play_pause_button_clicked()
 //    ui->play_pause_button->setIconSize(QSize(65, 65));
     ui->statusbar->showMessage("play_pause_button_clicked");
 
+
     // проверка на то, что музыка есть!
-    if (m_player->state()!=QMediaPlayer::PlayingState) {
+    if (!m_playlist->isEmpty() && m_player->state()!=QMediaPlayer::PlayingState) {
         m_player->play();
         ui->play_pause_button->setChecked(true);
     }
@@ -114,6 +169,7 @@ void MainWindow::on_mute_button_clicked()
 //    last_volume_slider_value=m_player->volume();
 //    ui->statusbar->showMessage(QString::number(last_volume_slider_value));
     is_muting=true;
+
     if (m_player->isMuted()){ // разьъючиваем
         m_player->setMuted(false);
         ui->mute_button->setChecked(false);
@@ -132,6 +188,7 @@ void MainWindow::on_mute_button_clicked()
         m_player->setMuted(true);
         ui->mute_button->setChecked(true);
     }
+
     is_muting=false;
 }
 
@@ -145,5 +202,29 @@ void MainWindow::on_volume_slider_valueChanged(int value)
             on_mute_button_clicked();
         }
     }
+}
+
+
+void MainWindow::on_random_mode_button_clicked()
+{
+    m_playlist->setPlaybackMode(QMediaPlaylist::Random);
+    ui->loop_mode_button->setChecked(false);
+    ui->track_loop_mode_button->setChecked(false);
+}
+
+
+void MainWindow::on_loop_mode_button_clicked()
+{
+    m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+    ui->random_mode_button->setChecked(false);
+    ui->track_loop_mode_button->setChecked(false);
+}
+
+
+void MainWindow::on_track_loop_mode_button_clicked()
+{
+    m_playlist->setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
+    ui->random_mode_button->setChecked(false);
+    ui->loop_mode_button->setChecked(false);
 }
 
