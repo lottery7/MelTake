@@ -6,13 +6,17 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    MainWindow w;
+    
+    
+    MainWindow window;
+    window.show();
+    
+    
+    
 
-    // Первоначально объявляем текущий плейлист и трек (спросить - почему при разкомменчивание программа crushed)
-            audio_app::playlist current_playlist;
-            audio_app::track current_track;
-            // НЕТ ВСЕ НЕ ТАК - ДУМАЙ ЕЩЕ
-            // Первоначально паказывается отображение по умолчанию
+//            audio_app::playlist current_playlist;
+//            audio_app::track current_track;
+
 
         // Далее проверяем - знает ли плеер хотя бы об одной музыкальной композиции
             //   Нужно создать что-то постоянное (не удаляется после закрытия),
@@ -30,6 +34,8 @@ int main(int argc, char *argv[])
         // далее присваеваем значение  переменной current_track
 
 
-    w.show();
+//    w.show();
+
+
     return a.exec();
 }
