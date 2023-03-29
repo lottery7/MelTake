@@ -6,9 +6,46 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1059</width>
-    <height>937</height>
+    <width>1200</width>
+    <height>800</height>
    </rect>
+  </property>
+  <property name="palette">
+   <palette>
+    <active>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>180</red>
+        <green>200</green>
+        <blue>193</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </active>
+    <inactive>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>240</red>
+        <green>240</green>
+        <blue>240</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </inactive>
+    <disabled>
+     <colorrole role="Window">
+      <brush brushstyle="SolidPattern">
+       <color alpha="255">
+        <red>180</red>
+        <green>200</green>
+        <blue>193</blue>
+       </color>
+      </brush>
+     </colorrole>
+    </disabled>
+   </palette>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
@@ -24,7 +61,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>load_tracks_button</string>
+     <string>load_tracks</string>
     </property>
    </widget>
    <widget class="QPushButton" name="previous_track_button">
@@ -32,25 +69,25 @@
      <rect>
       <x>70</x>
       <y>250</y>
-      <width>211</width>
+      <width>121</width>
       <height>51</height>
      </rect>
     </property>
     <property name="text">
-     <string>previous_track_button</string>
+     <string>previous_track</string>
     </property>
    </widget>
    <widget class="QPushButton" name="play_pause_button">
     <property name="geometry">
      <rect>
-      <x>300</x>
+      <x>210</x>
       <y>200</y>
-      <width>211</width>
+      <width>131</width>
       <height>51</height>
      </rect>
     </property>
     <property name="text">
-     <string>play_pause_button</string>
+     <string>play_pause</string>
     </property>
     <property name="checkable">
      <bool>true</bool>
@@ -59,14 +96,14 @@
    <widget class="QPushButton" name="next_trak_button">
     <property name="geometry">
      <rect>
-      <x>530</x>
+      <x>360</x>
       <y>250</y>
-      <width>211</width>
+      <width>141</width>
       <height>51</height>
      </rect>
     </property>
     <property name="text">
-     <string>next_trak_button</string>
+     <string>next_trak</string>
     </property>
    </widget>
    <widget class="QTableView" name="playlist_tabel_view">
@@ -93,6 +130,9 @@
     </property>
    </widget>
    <widget class="QProgressBar" name="track_progress_bar">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>20</x>
@@ -103,6 +143,12 @@
     </property>
     <property name="value">
      <number>0</number>
+    </property>
+    <property name="textVisible">
+     <bool>false</bool>
+    </property>
+    <property name="format">
+     <string>%p%</string>
     </property>
    </widget>
    <widget class="QSlider" name="volume_slider">
@@ -125,13 +171,64 @@
     <property name="geometry">
      <rect>
       <x>460</x>
-      <y>70</y>
-      <width>80</width>
-      <height>24</height>
+      <y>60</y>
+      <width>81</width>
+      <height>41</height>
      </rect>
     </property>
     <property name="text">
      <string>mute</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="random_mode_button">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>200</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Random</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="loop_mode_button">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>233</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Loop</string>
+    </property>
+    <property name="checkable">
+     <bool>true</bool>
+    </property>
+    <property name="checked">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="track_loop_mode_button">
+    <property name="geometry">
+     <rect>
+      <x>610</x>
+      <y>270</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Track Loop</string>
     </property>
     <property name="checkable">
      <bool>true</bool>
