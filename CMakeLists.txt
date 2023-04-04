@@ -24,8 +24,6 @@ set(HEADERS
 set(SOURCES
     src/playlist_functions.cpp
     src/settings_functions.cpp
-    src/track_functions.cpp
-    src/music_base.cpp
 )
 
 
