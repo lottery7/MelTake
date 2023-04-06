@@ -54,11 +54,8 @@ MainWindow::MainWindow(QWidget *parent)
          data_stream.seek(0);
          while(!data_stream.atEnd()){
              track_path=data_stream.readLine();
-//              ui->test_label->setText(ui->test_label->text() + "\n from data_file:  " + track_path);
              if(track_path.left(8)=="volume: "){
-//                 ui->test_label->setText(ui->test_label->text() + "\n volume " + track_path);
                  track_path=track_path.mid(8);
-//                 ui->test_label->setText(ui->test_label->text() + "\n !volume " + track_path);
                  ui->volume_slider->setValue(track_path.toInt());
                  continue;
              }
@@ -72,9 +69,6 @@ MainWindow::MainWindow(QWidget *parent)
                  m_playlist->addMedia(QUrl(track_path));
              }
          }
-
-//         ui->test_label->setText(ui->test_label->text() + "\n OK " + QString::number(ui->volume_slider->value()));
-
      }
 
     // при дабл-клике по треку устанавливаем его в плейлисте
@@ -135,7 +129,6 @@ void MainWindow::on_load_tracks_button_clicked()
 {
     ui->statusbar->showMessage("load_tracks_button_clicked");
     QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("Audio Files (*.mp3)"));
-
     QFile track_data_file(TRACK_DATA);
     if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
         for (auto &u:files){
@@ -156,18 +149,13 @@ void MainWindow::on_load_tracks_button_clicked()
             }
             if(!is_found){
                 data_stream<<track_info<<"\n";
+                QList<QStandardItem *> items;
+                items.append(new QStandardItem(QDir(u).dirName()));
+                items.append(new QStandardItem(u));
+                m_playlist_model->appendRow(items);
+                m_playlist->addMedia(QUrl(u));
             }
         }
-    }
-
-    /// Передать полученные paths
-    foreach (QString filePath, files) {
-        // Добавить проверку на то, что трек уже находится в листе
-        QList<QStandardItem *> items;
-        items.append(new QStandardItem(QDir(filePath).dirName()));
-        items.append(new QStandardItem(filePath));
-        m_playlist_model->appendRow(items);
-        m_playlist->addMedia(QUrl(filePath));
     }
 }
 
