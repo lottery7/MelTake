@@ -103,6 +103,7 @@ MainWindow::~MainWindow()
     QStringList track_paths;
     QTextStream data_stream(&track_data);
     if(track_data.open(QIODevice::ReadWrite | QIODevice::Text)){
+
         while(!data_stream.atEnd()){
             QString track = data_stream.readLine();
             if(track.mid(0,8)!="volume: "){
@@ -114,8 +115,10 @@ MainWindow::~MainWindow()
 
  }
   track_data.resize(0);
-        for(int i = track_paths.size()-1;i>-1;i--){
+
+        for(int i = 0;i<=track_paths.size()-1;i++){
             data_stream<<track_paths.at(i)<<"\n";
+
         }
 
     delete ui;
@@ -267,5 +270,24 @@ void MainWindow::on_track_loop_mode_button_clicked()
     m_playlist->setPlaybackMode(QMediaPlaylist::CurrentItemInLoop);
     ui->random_mode_button->setChecked(false);
     ui->loop_mode_button->setChecked(false);
+}
+
+void delete_track_from_datafile(QString track_path_to_delete){
+    QFile track_data_file(TRACK_DATA);
+    QString left_track_data;
+    if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
+        QTextStream data_stream(&track_data_file);
+            data_stream.seek(0);
+            while(!data_stream.atEnd()){
+                QString line = data_stream.readLine();
+                if(!(line.mid(1,line.size()-2)==track_path_to_delete)){
+                    left_track_data.append(line+"\n");
+                }
+            }
+            track_data_file.resize(0);
+            data_stream<<left_track_data;
+            track_data_file.close();
+
+    }
 }
 
