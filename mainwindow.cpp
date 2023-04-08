@@ -6,6 +6,11 @@
 #include <QStandardItemModel>
 #include <QWidget>
 #include <QFileDialog>
+#include <QCoreApplication>
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
+#include <taglib/taglib.h>
+#include <QSharedPointer>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -118,7 +123,6 @@ MainWindow::~MainWindow()
 
         for(int i = 0;i<=track_paths.size()-1;i++){
             data_stream<<track_paths.at(i)<<"\n";
-
         }
 
     delete ui;
@@ -134,7 +138,8 @@ void MainWindow::on_load_tracks_button_clicked()
     QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("Audio Files (*.mp3)"));
     QFile track_data_file(TRACK_DATA);
     if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
-        for (auto &u:files){
+
+        for ( auto &u:files){
             QTextStream data_stream(&track_data_file);
 
             data_stream.setAutoDetectUnicode(true);
@@ -152,11 +157,20 @@ void MainWindow::on_load_tracks_button_clicked()
             }
             if(!is_found){
                 data_stream<<track_info<<"\n";
-                QList<QStandardItem *> items;
-                items.append(new QStandardItem(QDir(u).dirName()));
-                items.append(new QStandardItem(u));
-                m_playlist_model->appendRow(items);
-                m_playlist->addMedia(QUrl(u));
+                QVector<QSharedPointer<TagLib::FileRef>> file_refs;
+                QString filename = QDir(u).dirName();
+//                TagLib::FileRef* file_ref = new TagLib::FileRef(filename.toStdString().c_str());
+//                file_refs.append(QSharedPointer<TagLib::FileRef>(file_ref));
+//                file_refs.append(new QSharedPointer<TagLib::FileRef>(new TagLib::FileRef(QDir(u).dirName().toStdString().c_str())));
+//                QList <TagLib::FileRef*> items;
+//                QString filePath = QDir(u).dirName();
+//                items.append(new TagLib::FileRef(filePath.toStdString().c_str()));
+//                items.append(new TagLib::FileRef(QDir(u).dirName().toStdString().c_str()));
+
+//                items.append(new QStandardItem(QDir(u).dirName()));
+//                items.append(new QStandardItem(u));
+//                m_playlist_model->appendRow(items);
+//                m_playlist->addMedia(QUrl(u));
             }
         }
     }
