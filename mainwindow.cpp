@@ -7,10 +7,9 @@
 #include <QWidget>
 #include <QFileDialog>
 #include <QCoreApplication>
-#include <taglib/fileref.h>
 #include <taglib/tag.h>
 #include <taglib/taglib.h>
-#include <QSharedPointer>
+#include <taglib/mpegfile.h>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -26,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_playlist_model = new QStandardItemModel(this);
     m_playlist_model->setHorizontalHeaderLabels(QStringList()<<tr("track_name")<<tr("path")); // заменить тупь на трек
+
     ui->playlist_tabel_view->setModel(m_playlist_model);
     ui->playlist_tabel_view->hideColumn(1);
     ui->playlist_tabel_view->horizontalHeader()->setVisible(false); // спрятать заголовки столбцов
@@ -61,7 +61,7 @@ MainWindow::MainWindow(QWidget *parent)
              track_path=data_stream.readLine();
              if(track_path.left(8)=="volume: "){
                  track_path=track_path.mid(8);
-                 ui->volume_slider->setValue(track_path.toInt());
+                 ui->volume_slider->setValue(track_path  .toInt());
                  continue;
              }
              track_path = track_path.mid(1,track_path.size()-2);
@@ -72,6 +72,16 @@ MainWindow::MainWindow(QWidget *parent)
                  items.append(new QStandardItem(track_path));
                  m_playlist_model->appendRow(items);
                  m_playlist->addMedia(QUrl(track_path));
+                 TagLib::MPEG::File* mpeg_track = new TagLib::MPEG::File(track_path.toStdString().c_str());
+                 if(mpeg_track->isValid()){
+
+                 metadata.insert(track_path, mpeg_track);
+             //    ui->test_label->setText(ui->test_label->text() + "\n loaded to metadata map: " + track_path + "---" +QString::fromStdString(mpeg_track->tag()->title().to8Bit(true)));
+                 }
+                 else{
+                     //error
+             //        ui->test_label->setText(ui->test_label->text() + "\n error" );
+                 }
              }
          }
      }
@@ -129,13 +139,26 @@ MainWindow::~MainWindow()
     delete m_playlist_model;
     delete m_playlist;
     delete m_player;
+    metadata.clear();
 }
 
+void MainWindow::add_to_metadata_table(QString track_path){
+    TagLib::MPEG::File* mpeg_track = new TagLib::MPEG::File(track_path.toStdString().c_str());
+    if(mpeg_track->isValid()){
+
+    metadata.insert(track_path, mpeg_track);
+//    ui->test_label->setText(ui->test_label->text() + "\n loaded to metadata map: " + track_path + "---" +QString::fromStdString(mpeg_track->tag()->title().to8Bit(true)));
+    }
+    else{
+        //error
+//        ui->test_label->setText(ui->test_label->text() + "\n error" );
+    }
+}
 
 void MainWindow::on_load_tracks_button_clicked()
 {
     ui->statusbar->showMessage("load_tracks_button_clicked");
-    QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("Audio Files (*.mp3)"));
+    QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("MPEG Files (*.mp3 *.mpeg *.mpg)"));
     QFile track_data_file(TRACK_DATA);
     if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
 
@@ -157,20 +180,12 @@ void MainWindow::on_load_tracks_button_clicked()
             }
             if(!is_found){
                 data_stream<<track_info<<"\n";
-                QVector<QSharedPointer<TagLib::FileRef>> file_refs;
-                QString filename = QDir(u).dirName();
-//                TagLib::FileRef* file_ref = new TagLib::FileRef(filename.toStdString().c_str());
-//                file_refs.append(QSharedPointer<TagLib::FileRef>(file_ref));
-//                file_refs.append(new QSharedPointer<TagLib::FileRef>(new TagLib::FileRef(QDir(u).dirName().toStdString().c_str())));
-//                QList <TagLib::FileRef*> items;
-//                QString filePath = QDir(u).dirName();
-//                items.append(new TagLib::FileRef(filePath.toStdString().c_str()));
-//                items.append(new TagLib::FileRef(QDir(u).dirName().toStdString().c_str()));
-
-//                items.append(new QStandardItem(QDir(u).dirName()));
-//                items.append(new QStandardItem(u));
-//                m_playlist_model->appendRow(items);
-//                m_playlist->addMedia(QUrl(u));
+                QList<QStandardItem *> items;
+                items.append(new QStandardItem(QDir(u).dirName()));
+                items.append(new QStandardItem(u));
+                m_playlist_model->appendRow(items);
+                m_playlist->addMedia(QUrl(u));
+                add_to_metadata_table(u);
             }
         }
     }
@@ -286,7 +301,11 @@ void MainWindow::on_track_loop_mode_button_clicked()
     ui->loop_mode_button->setChecked(false);
 }
 
-void delete_track_from_datafile(QString track_path_to_delete){
+void MainWindow::delete_track_from_metadata_table(QString track_path_to_delete){
+    metadata.remove(track_path_to_delete);
+}
+
+void MainWindow::delete_track_from_datafile(QString track_path_to_delete){
     QFile track_data_file(TRACK_DATA);
     QString left_track_data;
     if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
@@ -301,7 +320,7 @@ void delete_track_from_datafile(QString track_path_to_delete){
             track_data_file.resize(0);
             data_stream<<left_track_data;
             track_data_file.close();
-
     }
+    delete_track_from_metadata_table(track_path_to_delete);
 }
 
