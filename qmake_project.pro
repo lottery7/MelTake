@@ -25,7 +25,7 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 #напиши свой путь к taglib
-win32: LIBS += -LC:/Users/HUAWEI/Downloads/taglib-1.13.tar/taglib-1.13/taglib-1.13/build/lib/ -ltag
+win32: LIBS += -LC:\Qt\lib\taglib\finish\lib\ -ltag
 
-INCLUDEPATH += C:/Users/HUAWEI/Downloads/taglib-1.13.tar/taglib-1.13/taglib-1.13/build/include
-DEPENDPATH += C:/Users/HUAWEI/Downloads/taglib-1.13.tar/taglib-1.13/taglib-1.13/build/include
+INCLUDEPATH += C:\Qt\lib\taglib\finish\include
+DEPENDPATH += C:\Qt\lib\taglib\finish\include
