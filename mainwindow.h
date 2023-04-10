@@ -5,6 +5,9 @@
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QStandardItemModel>
+#include <taglib/tag.h>
+#include <taglib/taglib.h>
+#include <taglib/mpegfile.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -37,6 +40,12 @@ private slots:
 
     void on_track_loop_mode_button_clicked();
 
+    void add_to_metadata_table(QString track_path);
+
+    void delete_track_from_datafile(QString track_path_to_delete);
+
+    void delete_track_from_metadata_table(QString track_path_to_delete);
+
 private:
     Ui::MainWindow *ui;
 
@@ -48,6 +57,8 @@ private:
     QMediaPlaylist *m_playlist;    // структура с обектами, которые воспроизводятся в проигрыватели
 
     QStandardItemModel *m_playlist_model;   // структура необходимая для отображения треков в таблице треков
+
+    QMap<QString, TagLib::MPEG::File*> metadata;
 
 
     // возможно в другое место перенести пока не знаю ? спросить!
