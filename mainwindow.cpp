@@ -6,11 +6,16 @@
 #include <QStandardItemModel>
 #include <QWidget>
 #include <QFileDialog>
+#include <QPixmap>
 
 #include "QCoreApplication"
 #include <taglib/tag.h>
 #include <taglib/taglib.h>
 #include <taglib/mpegfile.h>
+#include <taglib/id3v2frame.h>
+#include <taglib/id3v2header.h>
+#include <taglib/id3v2tag.h>
+#include <taglib/attachedpictureframe.h>
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 MainWindow::MainWindow(QWidget *parent)
@@ -38,7 +43,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_player->setPlaylist(m_playlist);
     m_player->setVolume(stored_volume_value);
     ui->volume_slider->setValue(stored_volume_value);
-
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
 
     if(QFile::exists(TRACK_DATA)){
@@ -73,22 +77,35 @@ MainWindow::MainWindow(QWidget *parent)
                 items.append(new QStandardItem(track_path));
                 m_playlist_model->appendRow(items);
                 m_playlist->addMedia(QUrl(track_path));
-                if (m_playlist->mediaCount()==1){
-                        // устанавлмваем название трека, если плейлист не пустой
-                    ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(0, 0)).toString());
+
+
+                if (m_playlist->mediaCount()==0){
+                    ui->track_title_lable->setText("No Track");
+                    QPixmap pixmap(":/resources/cover.png");
+                    ui->album_cover_lable->setPixmap(pixmap);
                 }
-
-/// THIS IS BIG BIG ERROR
-//                TagLib::MPEG::File* mpeg_track = new TagLib::MPEG::File(track_path.toStdString().c_str());
-//                if(mpeg_track->isValid()){
-//                    path_to_mpeg.insert(track_path, mpeg_track);
-//                    //    ui->test_label->setText(ui->test_label->text() + "\n loaded to metadata map: " + track_path + "---" +QString::fromStdString(mpeg_track->tag()->title().to8Bit(true)));
-//                }
-//                else{
-//                    //error
-//                    //        ui->test_label->setText(ui->test_label->text() + "\n error" );
-//                }
-
+                else{
+//                    m_playlist::currentIndexChanged(0);
+//                    m_playlist->setCurrentIndex(1);
+                                        TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
+                                        if (tag) {
+                                            TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
+                                            if (!frames.isEmpty()) {
+                                                TagLib::ID3v2::AttachedPictureFrame* apic = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+                                                QImage coverImage;
+                                                coverImage.loadFromData(reinterpret_cast<const uchar*>(apic->picture().data()), static_cast<int>(apic->picture().size()));
+                                                QPixmap pixmap = QPixmap::fromImage(coverImage);
+                                                ui->album_cover_lable->setPixmap(pixmap);
+                                            }
+                                        }
+                                        ui->track_title_lable->setText(tag->title().toCString(true));
+                                        std::string track_artist_album (mpeg_track.tag()->artist().toCString(true));
+                                        auto album = mpeg_track.tag()->album().toCString(true);
+                                        if (std::string(album)!=""){
+                                            track_artist_album+=" - "+std::string(album);
+                                        }
+                                        ui->track_artist_album_lable->setText(track_artist_album.c_str());
+                }
             }
         }
     }
@@ -98,9 +115,28 @@ MainWindow::MainWindow(QWidget *parent)
         m_playlist->setCurrentIndex(index.row());
     });
 
-            // установить название выбранного трека
-    connect(m_playlist, &QMediaPlaylist::currentIndexChanged, ui->current_track_label, [this](int index){
-        ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(index, 0)).toString());
+
+            // установить название и обложку выбранного трека
+    connect(m_playlist, &QMediaPlaylist::currentIndexChanged, ui->album_cover_lable, [this](int index){
+        TagLib::MPEG::File mpeg_track (m_playlist_model->data(m_playlist_model->index(index, 1)).toString().toStdString().c_str());
+        TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
+        if (tag) {
+            TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
+            if (!frames.isEmpty()) {
+                TagLib::ID3v2::AttachedPictureFrame* apic = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+                QImage coverImage;
+                coverImage.loadFromData(reinterpret_cast<const uchar*>(apic->picture().data()), static_cast<int>(apic->picture().size()));
+                QPixmap pixmap = QPixmap::fromImage(coverImage);
+                ui->album_cover_lable->setPixmap(pixmap);
+            }
+        }
+        ui->track_title_lable->setText(tag->title().toCString(true));
+        std::string track_artist_album (mpeg_track.tag()->artist().toCString(true));
+        auto album = mpeg_track.tag()->album().toCString(true);
+        if (std::string(album)!=""){
+            track_artist_album+=" - "+std::string(album);
+        }
+        ui->track_artist_album_lable->setText(track_artist_album.c_str());
     });
 
             // изменение progress_bar при смене трека
@@ -134,7 +170,7 @@ MainWindow::~MainWindow()
         track_paths.prepend(s);
     }
     track_data.resize(0);
-    for(int i = 0;i<=track_paths.size()-1;i++){   /// Что это?
+    for(int i = 0;i<=track_paths.size()-1;i++){
         data_stream<<track_paths.at(i)<<"\n";
     }
 
@@ -143,6 +179,11 @@ MainWindow::~MainWindow()
     delete m_playlist;
     delete m_player;
 }
+
+
+
+
+
 
 
 void MainWindow::on_load_tracks_button_clicked()
@@ -178,32 +219,13 @@ void MainWindow::on_load_tracks_button_clicked()
                 items.append(new QStandardItem(track_name.c_str()));
                 items.append(new QStandardItem(track_path));
                 m_playlist_model->appendRow(items);
-                m_playlist->addMedia(QUrl(track_path));
-                if (m_playlist->mediaCount()==1){
-                    // устанавлмваем название трека, если плейлист не пустой
-                    ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(0, 0)).toString());
-                }
+                m_playlist->addMedia(QUrl(track_path));             
             }
         }
     }
+    
 
-
-
-            //// Передать полученные paths
-//    foreach (QString track_path, track_paths) {
-//        // Добавить проверку на то, что трек уже находится в листе
-//        QList<QStandardItem *> items;
-//        TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
-//        items.append(new QStandardItem(mpeg_track.tag()->title().toCString(true)));
-//        items.append(new QStandardItem(track_path));
-//        m_playlist_model->appendRow(items);
-//        m_playlist->addMedia(QUrl(track_path));
-//        if (m_playlist->mediaCount()==1){
-//            // устанавлмваем название трека, если плейлист не пустой
-//            ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(0, 0)).toString());
-//        }
-//    }
-
+    
 }
 
 
@@ -282,7 +304,6 @@ void MainWindow::on_mute_button_clicked()
 
 void MainWindow::on_volume_slider_valueChanged(int value)
 {
-    ui->statusbar->showMessage("volume_slider_valueChanged");
     if (!is_muting){
         m_player->setVolume(value);
         if (m_player->isMuted() && value>0 || !m_player->isMuted() && value==0){ // рязмъючиваем
@@ -290,7 +311,6 @@ void MainWindow::on_volume_slider_valueChanged(int value)
         }
     }
 }
-
 
 void MainWindow::on_random_mode_button_clicked()
 {
@@ -331,8 +351,9 @@ void MainWindow::delete_track_from_datafile(QString track_path_to_delete){
         data_stream<<left_track_data;
         track_data_file.close();
     }
-
 }
+
+
 
 
 
