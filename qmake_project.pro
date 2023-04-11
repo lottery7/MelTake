@@ -25,7 +25,12 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 #напиши свой путь к taglib
-win32: LIBS += -LC:\Qt\lib\taglib\finish\lib\ -ltag
 
-INCLUDEPATH += C:\Qt\lib\taglib\finish\include
-DEPENDPATH += C:\Qt\lib\taglib\finish\include
+
+win32: LIBS += -LD:/QT/Libs/taglib/finish/lib/ -llibtag.dll
+
+INCLUDEPATH += D:/QT/Libs/taglib/finish/include
+DEPENDPATH += D:/QT/Libs/taglib/finish/include
+
+RESOURCES += \
+    resources.qrc
