@@ -43,12 +43,8 @@ private slots:
 
     void delete_track_from_datafile(QString track_path_to_delete);
 
-   // void add_track_to_playlist(QString& track_path, QStandardItemModel &m_playlist_model, QMediaPlaylist &m_playlist);
-
 private:
     Ui::MainWindow *ui;
-
-            // возможно стоит вынести это в отдельный заголовочный файл, посмотрим по дальнейшей реализации
 
     ///            QMap<QString, TagLib::MPEG::File*> path_to_mpeg;        -     НА ПОТОМ!!!
 
@@ -57,18 +53,9 @@ private:
     QMediaPlaylist *m_playlist;    // структура с обектами, которые воспроизводятся в проигрыватели
 
     QStandardItemModel *m_playlist_model;   // структура необходимая для отображения треков в таблице треков
-
-
-            // возможно в другое место перенести пока не знаю ? спросить!
+    
     int last_volume_slider_value=5;
     bool is_muting=false;
-
-            // Это тоже перенести! Это параметер который должен сохраняться в settings
-            // Такие значения надо помечать по-особому, к примеру stored_ - сохраненный
-
-            // Или лучше пометить from_settings?
     int stored_volume_value = 60;
-
-
 };
 #endif // MAINWINDOW_H
