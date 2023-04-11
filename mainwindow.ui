@@ -104,8 +104,14 @@
       </property>
       <item>
        <widget class="QLabel" name="album_cover_lable">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
         <property name="text">
          <string>Standart_app_cover</string>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
         </property>
        </widget>
       </item>
@@ -141,6 +147,9 @@
          <layout class="QHBoxLayout" name="track_control_panel_layout">
           <property name="spacing">
            <number>10</number>
+          </property>
+          <property name="sizeConstraint">
+           <enum>QLayout::SetMinimumSize</enum>
           </property>
           <item>
            <layout class="QGridLayout" name="play_panel">
@@ -194,6 +203,9 @@
           </item>
           <item>
            <layout class="QGridLayout" name="gridLayout">
+            <property name="sizeConstraint">
+             <enum>QLayout::SetMinimumSize</enum>
+            </property>
             <item row="0" column="0">
              <widget class="QPushButton" name="random_mode_button">
               <property name="text">
@@ -259,7 +271,7 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::Maximum</enum>
+         <enum>QSizePolicy::Expanding</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
