@@ -1,21 +1,21 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
+#include "ui_mainwindow.h"
 #include "include/fwd.hpp"
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QStandardItemModel>
 #include <QWidget>
 #include <QFileDialog>
-#include <QCoreApplication>
+
+#include "QCoreApplication"
 #include <taglib/tag.h>
 #include <taglib/taglib.h>
 #include <taglib/mpegfile.h>
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 MainWindow::MainWindow(QWidget *parent)
-        : QMainWindow(parent)
-        , ui(new Ui::MainWindow)
+    : QMainWindow(parent)
+      , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -25,7 +25,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     m_playlist_model = new QStandardItemModel(this);
     m_playlist_model->setHorizontalHeaderLabels(QStringList()<<tr("track_name")<<tr("path")); // заменить тупь на трек
-
     ui->playlist_tabel_view->setModel(m_playlist_model);
     ui->playlist_tabel_view->hideColumn(1);
     ui->playlist_tabel_view->horizontalHeader()->setVisible(false); // спрятать заголовки столбцов
@@ -49,126 +48,117 @@ MainWindow::MainWindow(QWidget *parent)
         QFile file("track_data.txt");
     }
 
+    QFile track_data_file(TRACK_DATA);
+    if(track_data_file.open(QIODevice::ReadOnly | QIODevice::Text))
+    {
+        QTextStream data_stream(&track_data_file);
+        QString track_path;
+        data_stream.seek(0);
+        while(!data_stream.atEnd()){
+            track_path=data_stream.readLine();
+            if(track_path.left(8)=="volume: "){
+                track_path=track_path.mid(8);
+                ui->volume_slider->setValue(track_path  .toInt());
+                continue;
+            }
+            track_path = track_path.mid(1,track_path.size()-2);
+            QFile track(track_path);
+            if(track.exists()){
+                QList<QStandardItem *> items;
+                TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
+                std::string track_name (mpeg_track.tag()->title().toCString(true));
+                auto artist = mpeg_track.tag()->artist().toCString(true);
+                track_name+=" - "+std::string(artist);
+                items.append(new QStandardItem(track_name.c_str()));
+                items.append(new QStandardItem(track_path));
+                m_playlist_model->appendRow(items);
+                m_playlist->addMedia(QUrl(track_path));
+                if (m_playlist->mediaCount()==1){
+                        // устанавлмваем название трека, если плейлист не пустой
+                    ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(0, 0)).toString());
+                }
 
-    /// Получение дефолтного плейлиста из уже знакомых треков из прошлого открытия приложения
-     QFile track_data_file(TRACK_DATA);
-     if(track_data_file.open(QIODevice::ReadOnly | QIODevice::Text))
-     {
-         QTextStream data_stream(&track_data_file);
-         QString track_path;
-         data_stream.seek(0);
-         while(!data_stream.atEnd()){
-             track_path=data_stream.readLine();
-             if(track_path.left(8)=="volume: "){
-                 track_path=track_path.mid(8);
-                 ui->volume_slider->setValue(track_path  .toInt());
-                 continue;
-             }
-             track_path = track_path.mid(1,track_path.size()-2);
-             QFile track(track_path);
-             if(track.exists()){
-                 QList<QStandardItem *> items;
-                 items.append(new QStandardItem(QDir(track_path).dirName()));
-                 items.append(new QStandardItem(track_path));
-                 m_playlist_model->appendRow(items);
-                 m_playlist->addMedia(QUrl(track_path));
-                 TagLib::MPEG::File* mpeg_track = new TagLib::MPEG::File(track_path.toStdString().c_str());
-                 if(mpeg_track->isValid()){
+/// THIS IS BIG BIG ERROR
+//                TagLib::MPEG::File* mpeg_track = new TagLib::MPEG::File(track_path.toStdString().c_str());
+//                if(mpeg_track->isValid()){
+//                    path_to_mpeg.insert(track_path, mpeg_track);
+//                    //    ui->test_label->setText(ui->test_label->text() + "\n loaded to metadata map: " + track_path + "---" +QString::fromStdString(mpeg_track->tag()->title().to8Bit(true)));
+//                }
+//                else{
+//                    //error
+//                    //        ui->test_label->setText(ui->test_label->text() + "\n error" );
+//                }
 
-                 metadata.insert(track_path, mpeg_track);
-             //    ui->test_label->setText(ui->test_label->text() + "\n loaded to metadata map: " + track_path + "---" +QString::fromStdString(mpeg_track->tag()->title().to8Bit(true)));
-                 }
-                 else{
-                     //error
-             //        ui->test_label->setText(ui->test_label->text() + "\n error" );
-                 }
-             }
-         }
-     }
+            }
+        }
+    }
 
-    // при дабл-клике по треку устанавливаем его в плейлисте
+            // при дабл-клике по треку устанавливаем его в плейлисте
     connect(ui->playlist_tabel_view, &QTableView::doubleClicked, m_playlist, [this](const QModelIndex &index){
         m_playlist->setCurrentIndex(index.row());
     });
 
-    // установить название выбранного трека
+            // установить название выбранного трека
     connect(m_playlist, &QMediaPlaylist::currentIndexChanged, ui->current_track_label, [this](int index){
         ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(index, 0)).toString());
     });
 
-    // изменение progress_bar при смене трека
+            // изменение progress_bar при смене трека
     connect(m_player,&QMediaPlayer::durationChanged, ui->track_progress_bar,[&] (qint64 duration){
         ui->track_progress_bar->setMaximum(duration);
     });
 
-    // изменение progress_bar при проигрывание
+            // изменение progress_bar при проигрывание
     connect(m_player,&QMediaPlayer::positionChanged, ui->track_progress_bar,[&] (qint64 position){
         ui->track_progress_bar->setValue(position);
     });
 
-//    connect(ui->track_progress_bar,&Q)
+    //    connect(ui->track_progress_bar,&Q)
 
 }
 
 MainWindow::~MainWindow()
 {
-
     ///запись обновленных настроек в файл с датой
     QFile track_data(TRACK_DATA);
     QStringList track_paths;
     QTextStream data_stream(&track_data);
     if(track_data.open(QIODevice::ReadWrite | QIODevice::Text)){
-
         while(!data_stream.atEnd()){
             QString track = data_stream.readLine();
             if(track.mid(0,8)!="volume: "){
-            track_paths<<track;
+                track_paths<<track;
             }
         }
         QString s = "volume: "+QString::number(ui->volume_slider->value());
         track_paths.prepend(s);
-
- }
-  track_data.resize(0);
-
-        for(int i = 0;i<=track_paths.size()-1;i++){
-            data_stream<<track_paths.at(i)<<"\n";
-        }
+    }
+    track_data.resize(0);
+    for(int i = 0;i<=track_paths.size()-1;i++){   /// Что это?
+        data_stream<<track_paths.at(i)<<"\n";
+    }
 
     delete ui;
     delete m_playlist_model;
     delete m_playlist;
     delete m_player;
-    metadata.clear();
 }
 
-void MainWindow::add_to_metadata_table(QString track_path){
-    TagLib::MPEG::File* mpeg_track = new TagLib::MPEG::File(track_path.toStdString().c_str());
-    if(mpeg_track->isValid()){
-
-    metadata.insert(track_path, mpeg_track);
-//    ui->test_label->setText(ui->test_label->text() + "\n loaded to metadata map: " + track_path + "---" +QString::fromStdString(mpeg_track->tag()->title().to8Bit(true)));
-    }
-    else{
-        //error
-//        ui->test_label->setText(ui->test_label->text() + "\n error" );
-    }
-}
 
 void MainWindow::on_load_tracks_button_clicked()
 {
     ui->statusbar->showMessage("load_tracks_button_clicked");
-    QStringList files = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("MPEG Files (*.mp3 *.mpeg *.mpg)"));
+    QStringList track_paths = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("MPEG Files (*.mp3 *.mpeg *.mpg)"));
     QFile track_data_file(TRACK_DATA);
-    if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
+    if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){ /// Мне не нравиться эта строка, она не дает загрузить треки, если с ними что-то не так
 
-        for ( auto &u:files){
+        for (auto &track_path: track_paths){
             QTextStream data_stream(&track_data_file);
 
             data_stream.setAutoDetectUnicode(true);
             data_stream.setCodec("UTF-8");
 
-            QString track_info='"'+u+'"';
+            QString track_info='"'+track_path+'"';
             bool is_found = false;
             data_stream.seek(0);
             while(!data_stream.atEnd()){
@@ -181,18 +171,43 @@ void MainWindow::on_load_tracks_button_clicked()
             if(!is_found){
                 data_stream<<track_info<<"\n";
                 QList<QStandardItem *> items;
-                items.append(new QStandardItem(QDir(u).dirName()));
-                items.append(new QStandardItem(u));
+                TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
+                std::string track_name (mpeg_track.tag()->title().toCString(true));
+                auto artist = mpeg_track.tag()->artist().toCString(true);
+                track_name+=" - "+std::string(artist);
+                items.append(new QStandardItem(track_name.c_str()));
+                items.append(new QStandardItem(track_path));
                 m_playlist_model->appendRow(items);
-                m_playlist->addMedia(QUrl(u));
-                add_to_metadata_table(u);
+                m_playlist->addMedia(QUrl(track_path));
+                if (m_playlist->mediaCount()==1){
+                    // устанавлмваем название трека, если плейлист не пустой
+                    ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(0, 0)).toString());
+                }
             }
         }
     }
+
+
+
+            //// Передать полученные paths
+//    foreach (QString track_path, track_paths) {
+//        // Добавить проверку на то, что трек уже находится в листе
+//        QList<QStandardItem *> items;
+//        TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
+//        items.append(new QStandardItem(mpeg_track.tag()->title().toCString(true)));
+//        items.append(new QStandardItem(track_path));
+//        m_playlist_model->appendRow(items);
+//        m_playlist->addMedia(QUrl(track_path));
+//        if (m_playlist->mediaCount()==1){
+//            // устанавлмваем название трека, если плейлист не пустой
+//            ui->current_track_label->setText(m_playlist_model->data(m_playlist_model->index(0, 0)).toString());
+//        }
+//    }
+
 }
 
 
-void MainWindow::on_next_trak_button_clicked()
+void MainWindow::on_next_track_button_clicked()
 {
     ui->statusbar->showMessage("next_track_button_clicked");
     if (m_playlist->nextIndex()==m_playlist->currentIndex()){
@@ -218,12 +233,12 @@ void MainWindow::on_previous_track_button_clicked()
 
 void MainWindow::on_play_pause_button_clicked()
 {
-//    ui->play_pause_button->setIcon(QIcon(":/icons/..."));
-//    ui->play_pause_button->setIconSize(QSize(65, 65));
+    //    ui->play_pause_button->setIcon(QIcon(":/icons/..."));
+    //    ui->play_pause_button->setIconSize(QSize(65, 65));
     ui->statusbar->showMessage("play_pause_button_clicked");
 
 
-    // проверка на то, что музыка есть!
+            // проверка на то, что музыка есть!
     if (!m_playlist->isEmpty() && m_player->state()!=QMediaPlayer::PlayingState) {
         m_player->play();
         ui->play_pause_button->setChecked(true);
@@ -238,15 +253,15 @@ void MainWindow::on_play_pause_button_clicked()
 void MainWindow::on_mute_button_clicked()
 {
     ui->statusbar->showMessage("mute_button_clicked");
-//    last_volume_slider_value=m_player->volume();
-//    ui->statusbar->showMessage(QString::number(last_volume_slider_value));
+    //    last_volume_slider_value=m_player->volume();
+    //    ui->statusbar->showMessage(QString::number(last_volume_slider_value));
     is_muting=true;
 
     if (m_player->isMuted()){ // разьъючиваем
         m_player->setMuted(false);
         ui->mute_button->setChecked(false);
 
-        // Стоит ли разрешать проигрывать трек на 0 громкости?
+                // Стоит ли разрешать проигрывать трек на 0 громкости?
         if (last_volume_slider_value==0){
             last_volume_slider_value=10;
         }
@@ -274,7 +289,6 @@ void MainWindow::on_volume_slider_valueChanged(int value)
             on_mute_button_clicked();
         }
     }
-
 }
 
 
@@ -301,26 +315,33 @@ void MainWindow::on_track_loop_mode_button_clicked()
     ui->loop_mode_button->setChecked(false);
 }
 
-void MainWindow::delete_track_from_metadata_table(QString track_path_to_delete){
-    metadata.remove(track_path_to_delete);
-}
-
 void MainWindow::delete_track_from_datafile(QString track_path_to_delete){
     QFile track_data_file(TRACK_DATA);
     QString left_track_data;
     if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){
         QTextStream data_stream(&track_data_file);
-            data_stream.seek(0);
-            while(!data_stream.atEnd()){
-                QString line = data_stream.readLine();
-                if(!(line.mid(1,line.size()-2)==track_path_to_delete)){
-                    left_track_data.append(line+"\n");
-                }
+        data_stream.seek(0);
+        while(!data_stream.atEnd()){
+            QString line = data_stream.readLine();
+            if(!(line.mid(1,line.size()-2)==track_path_to_delete)){
+                left_track_data.append(line+"\n");
             }
-            track_data_file.resize(0);
-            data_stream<<left_track_data;
-            track_data_file.close();
+        }
+        track_data_file.resize(0);
+        data_stream<<left_track_data;
+        track_data_file.close();
     }
-    delete_track_from_metadata_table(track_path_to_delete);
+
 }
 
+
+
+/// Now it is not work
+//void add_track_to_playlist(QString& track_path, QStandardItemModel &m_playlist_model, QMediaPlaylist &m_playlist){
+//    QList<QStandardItem *> items;
+//    TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
+//    items.append(new QStandardItem(mpeg_track.tag()->title().toCString(true)));
+//    items.append(new QStandardItem(track_path));
+//    m_playlist_model.appendRow(items);
+//    m_playlist.addMedia(QUrl(track_path));
+//}
