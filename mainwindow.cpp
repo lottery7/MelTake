@@ -26,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // делает окно слегка прозрачным
     setWindowOpacity( 0.95 );
-    // для красивой реализации нужно будет добавить размытие
+    // для красивой реализации нужно будет добавить размытие и увеличение контрастности
 
     m_playlist_model = new QStandardItemModel(this);
     m_playlist_model->setHorizontalHeaderLabels(QStringList()<<tr("track_name")<<tr("path")); // заменить тупь на трек
@@ -44,6 +44,10 @@ MainWindow::MainWindow(QWidget *parent)
     m_player->setVolume(stored_volume_value);
     ui->volume_slider->setValue(stored_volume_value);
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+
+    // установка дефолтной обложки
+    QPixmap pixmap(":/resources/cover.png");
+    ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
 
     if(QFile::exists(TRACK_DATA)){
         qDebug()<<"file exists";
@@ -77,37 +81,37 @@ MainWindow::MainWindow(QWidget *parent)
                 items.append(new QStandardItem(track_path));
                 m_playlist_model->appendRow(items);
                 m_playlist->addMedia(QUrl(track_path));
-
-
-                if (m_playlist->mediaCount()==0){
-                    ui->track_title_lable->setText("No Track");
-                    QPixmap pixmap(":/resources/cover.png");
-                    ui->album_cover_lable->setPixmap(pixmap);
-                }
-                else{
-//                    m_playlist::currentIndexChanged(0);
-//                    m_playlist->setCurrentIndex(1);
-                                        TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
-                                        if (tag) {
-                                            TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
-                                            if (!frames.isEmpty()) {
-                                                TagLib::ID3v2::AttachedPictureFrame* apic = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
-                                                QImage coverImage;
-                                                coverImage.loadFromData(reinterpret_cast<const uchar*>(apic->picture().data()), static_cast<int>(apic->picture().size()));
-                                                QPixmap pixmap = QPixmap::fromImage(coverImage);
-                                                ui->album_cover_lable->setPixmap(pixmap);
-                                            }
-                                        }
-                                        ui->track_title_lable->setText(tag->title().toCString(true));
-                                        std::string track_artist_album (mpeg_track.tag()->artist().toCString(true));
-                                        auto album = mpeg_track.tag()->album().toCString(true);
-                                        if (std::string(album)!=""){
-                                            track_artist_album+=" - "+std::string(album);
-                                        }
-                                        ui->track_artist_album_lable->setText(track_artist_album.c_str());
-                }
             }
         }
+
+        // Глянуть!
+        if (!m_playlist->isEmpty()){
+            TagLib::MPEG::File mpeg_track (m_playlist_model->data(m_playlist_model->index(0, 1)).toString().toStdString().c_str());
+            TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
+            if (tag) {
+                TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
+                if (!frames.isEmpty()) {
+                    TagLib::ID3v2::AttachedPictureFrame* cover = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+                    if (cover){
+                        QImage coverImage;
+                        coverImage.loadFromData(reinterpret_cast<const uchar*>(cover->picture().data()), static_cast<int>(cover->picture().size()));
+                        QPixmap pixmap = QPixmap::fromImage(coverImage);
+                        ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));}
+                    else{
+                        QPixmap pixmap(":/resources/cover.png");
+                        ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
+                    }
+                }
+            }
+            ui->track_title_lable->setText(tag->title().toCString(true));
+            std::string track_artist_album (mpeg_track.tag()->artist().toCString(true));
+            auto album = mpeg_track.tag()->album().toCString(true);
+            if (std::string(album)!=""){
+                track_artist_album+=" - "+std::string(album);
+            }
+            ui->track_artist_album_lable->setText(track_artist_album.c_str());
+        }
+
     }
 
             // при дабл-клике по треку устанавливаем его в плейлисте
@@ -116,18 +120,23 @@ MainWindow::MainWindow(QWidget *parent)
     });
 
 
-            // установить название и обложку выбранного трека
+            // установить название и обложку выбранного трека (вынесу потом это в отдельную функцию, а то в 3-ех местах повторяется такой кусище)
     connect(m_playlist, &QMediaPlaylist::currentIndexChanged, ui->album_cover_lable, [this](int index){
         TagLib::MPEG::File mpeg_track (m_playlist_model->data(m_playlist_model->index(index, 1)).toString().toStdString().c_str());
         TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
         if (tag) {
             TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
             if (!frames.isEmpty()) {
-                TagLib::ID3v2::AttachedPictureFrame* apic = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+                TagLib::ID3v2::AttachedPictureFrame* cover = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+                if (cover){
                 QImage coverImage;
-                coverImage.loadFromData(reinterpret_cast<const uchar*>(apic->picture().data()), static_cast<int>(apic->picture().size()));
+                coverImage.loadFromData(reinterpret_cast<const uchar*>(cover->picture().data()), static_cast<int>(cover->picture().size()));
                 QPixmap pixmap = QPixmap::fromImage(coverImage);
-                ui->album_cover_lable->setPixmap(pixmap);
+                ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));}
+                else{
+                QPixmap pixmap(":/resources/cover.png");
+                ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
+                }
             }
         }
         ui->track_title_lable->setText(tag->title().toCString(true));
@@ -148,14 +157,11 @@ MainWindow::MainWindow(QWidget *parent)
     connect(m_player,&QMediaPlayer::positionChanged, ui->track_progress_bar,[&] (qint64 position){
         ui->track_progress_bar->setValue(position);
     });
-
-    //    connect(ui->track_progress_bar,&Q)
-
 }
 
 MainWindow::~MainWindow()
 {
-    ///запись обновленных настроек в файл с датой
+    // запись обновленных настроек в файл с датой
     QFile track_data(TRACK_DATA);
     QStringList track_paths;
     QTextStream data_stream(&track_data);
@@ -180,18 +186,13 @@ MainWindow::~MainWindow()
     delete m_player;
 }
 
-
-
-
-
-
-
 void MainWindow::on_load_tracks_button_clicked()
 {
+    auto tracks_num = m_playlist->mediaCount();
     ui->statusbar->showMessage("load_tracks_button_clicked");
     QStringList track_paths = QFileDialog::getOpenFileNames(this,tr("Open files"),QString(),tr("MPEG Files (*.mp3 *.mpeg *.mpg)"));
     QFile track_data_file(TRACK_DATA);
-    if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){ /// Мне не нравиться эта строка, она не дает загрузить треки, если с ними что-то не так
+    if(track_data_file.open(QIODevice::ReadWrite | QIODevice::Append | QIODevice::Text)){ /// Мне не нравиться эта строка, она не дает загрузить треки, если что-то не так датой
 
         for (auto &track_path: track_paths){
             QTextStream data_stream(&track_data_file);
@@ -223,15 +224,43 @@ void MainWindow::on_load_tracks_button_clicked()
             }
         }
     }
-    
 
-    
+
+    if (!m_playlist->isEmpty() && tracks_num==0){
+        TagLib::MPEG::File mpeg_track (m_playlist_model->data(m_playlist_model->index(0, 1)).toString().toStdString().c_str());
+        TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
+        if (tag) {
+            TagLib::ID3v2::FrameList frames = tag->frameList("APIC");
+            if (!frames.isEmpty()) {
+                TagLib::ID3v2::AttachedPictureFrame* cover = static_cast<TagLib::ID3v2::AttachedPictureFrame*>(frames.front());
+                if (cover){
+                    QImage coverImage;
+                    coverImage.loadFromData(reinterpret_cast<const uchar*>(cover->picture().data()), static_cast<int>(cover->picture().size()));
+                    QPixmap pixmap = QPixmap::fromImage(coverImage);
+                    ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));}
+                else{
+                    QPixmap pixmap(":/resources/cover.png");
+                    ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
+                }
+            }
+        }
+        ui->track_title_lable->setText(tag->title().toCString(true));
+        std::string track_artist_album (mpeg_track.tag()->artist().toCString(true));
+        auto album = mpeg_track.tag()->album().toCString(true);
+        if (std::string(album)!=""){
+            track_artist_album+=" - "+std::string(album);
+        }
+        ui->track_artist_album_lable->setText(track_artist_album.c_str());
+    }
+
 }
 
 
 void MainWindow::on_next_track_button_clicked()
 {
-    ui->statusbar->showMessage("next_track_button_clicked");
+    QString qs =QString::number(m_playlist->currentIndex())+" -> "+ QString::number(m_playlist->nextIndex());
+    ui->statusbar->showMessage(qs);
+
     if (m_playlist->nextIndex()==m_playlist->currentIndex()){
         m_player->setPosition(0);
     }
@@ -243,7 +272,8 @@ void MainWindow::on_next_track_button_clicked()
 
 void MainWindow::on_previous_track_button_clicked()
 {
-    ui->statusbar->showMessage("previou_track_button_clicked");
+    QString qs =QString::number(m_playlist->currentIndex())+" -> "+QString::number(m_playlist->previousIndex());
+    ui->statusbar->showMessage(qs);
     if (m_playlist->previousIndex()==m_playlist->currentIndex()){
         m_player->setPosition(0);
     }
@@ -255,12 +285,7 @@ void MainWindow::on_previous_track_button_clicked()
 
 void MainWindow::on_play_pause_button_clicked()
 {
-    //    ui->play_pause_button->setIcon(QIcon(":/icons/..."));
-    //    ui->play_pause_button->setIconSize(QSize(65, 65));
     ui->statusbar->showMessage("play_pause_button_clicked");
-
-
-            // проверка на то, что музыка есть!
     if (!m_playlist->isEmpty() && m_player->state()!=QMediaPlayer::PlayingState) {
         m_player->play();
         ui->play_pause_button->setChecked(true);
@@ -275,17 +300,13 @@ void MainWindow::on_play_pause_button_clicked()
 void MainWindow::on_mute_button_clicked()
 {
     ui->statusbar->showMessage("mute_button_clicked");
-    //    last_volume_slider_value=m_player->volume();
-    //    ui->statusbar->showMessage(QString::number(last_volume_slider_value));
     is_muting=true;
 
     if (m_player->isMuted()){ // разьъючиваем
         m_player->setMuted(false);
         ui->mute_button->setChecked(false);
-
-                // Стоит ли разрешать проигрывать трек на 0 громкости?
         if (last_volume_slider_value==0){
-            last_volume_slider_value=10;
+            last_volume_slider_value=20;
         }
         ui->volume_slider->setValue(last_volume_slider_value);
         m_player->setVolume(last_volume_slider_value);
@@ -352,17 +373,3 @@ void MainWindow::delete_track_from_datafile(QString track_path_to_delete){
         track_data_file.close();
     }
 }
-
-
-
-
-
-/// Now it is not work
-//void add_track_to_playlist(QString& track_path, QStandardItemModel &m_playlist_model, QMediaPlaylist &m_playlist){
-//    QList<QStandardItem *> items;
-//    TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
-//    items.append(new QStandardItem(mpeg_track.tag()->title().toCString(true)));
-//    items.append(new QStandardItem(track_path));
-//    m_playlist_model.appendRow(items);
-//    m_playlist.addMedia(QUrl(track_path));
-//}
