@@ -5,6 +5,7 @@
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
 #include <QStandardItemModel>
+
 #include <taglib/tag.h>
 #include <taglib/taglib.h>
 #include <taglib/mpegfile.h>
@@ -24,7 +25,7 @@ public:
 private slots:
     void on_load_tracks_button_clicked();
 
-    void on_next_trak_button_clicked();
+    void on_next_track_button_clicked();
 
     void on_previous_track_button_clicked();
 
@@ -40,17 +41,16 @@ private slots:
 
     void on_track_loop_mode_button_clicked();
 
-    void add_to_metadata_table(QString track_path);
-
     void delete_track_from_datafile(QString track_path_to_delete);
 
-    void delete_track_from_metadata_table(QString track_path_to_delete);
+   // void add_track_to_playlist(QString& track_path, QStandardItemModel &m_playlist_model, QMediaPlaylist &m_playlist);
 
 private:
     Ui::MainWindow *ui;
 
-    // возможно стоит вынести это в отдельный заголовочный файл, посмотрим по дальнейшей реализации
+            // возможно стоит вынести это в отдельный заголовочный файл, посмотрим по дальнейшей реализации
 
+    ///            QMap<QString, TagLib::MPEG::File*> path_to_mpeg;        -     НА ПОТОМ!!!
 
     QMediaPlayer *m_player;    // пригрыватель
 
@@ -58,17 +58,15 @@ private:
 
     QStandardItemModel *m_playlist_model;   // структура необходимая для отображения треков в таблице треков
 
-    QMap<QString, TagLib::MPEG::File*> metadata;
 
-
-    // возможно в другое место перенести пока не знаю ? спросить!
+            // возможно в другое место перенести пока не знаю ? спросить!
     int last_volume_slider_value=5;
     bool is_muting=false;
 
-    // Это тоже перенести! Это параметер который должен сохраняться в settings
-    // Такие значения надо помечать по-особому, к примеру stored_ - сохраненный
+            // Это тоже перенести! Это параметер который должен сохраняться в settings
+            // Такие значения надо помечать по-особому, к примеру stored_ - сохраненный
 
-    // Или лучше пометить from_settings?
+            // Или лучше пометить from_settings?
     int stored_volume_value = 60;
 
 
