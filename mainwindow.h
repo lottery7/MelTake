@@ -10,6 +10,8 @@
 #include <taglib/taglib.h>
 #include <taglib/mpegfile.h>
 
+#include "include/AudioVisualizer.hpp"
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -53,6 +55,8 @@ private:
     QMediaPlaylist *m_playlist;    // структура с обектами, которые воспроизводятся в проигрыватели
 
     QStandardItemModel *m_playlist_model;   // структура необходимая для отображения треков в таблице треков
+
+    audio_app::AudioVisualizer *m_visualizer;
     
     int last_volume_slider_value=5;
     bool is_muting=false;

@@ -16,6 +16,8 @@
 #include <taglib/id3v2header.h>
 #include <taglib/id3v2tag.h>
 #include <taglib/attachedpictureframe.h>
+
+#include "include/AudioVisualizer.hpp"
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 MainWindow::MainWindow(QWidget *parent)
@@ -44,6 +46,12 @@ MainWindow::MainWindow(QWidget *parent)
     m_player->setVolume(stored_volume_value);
     ui->volume_slider->setValue(stored_volume_value);
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+
+    // визуализатор
+    m_visualizer = new audio_app::AudioVisualizer;
+    m_visualizer->setMediaPlayer(m_player);
+    m_visualizer->resize(800, 320);
+    m_visualizer->show();
 
     // установка дефолтной обложки
     QPixmap pixmap(":/resources/cover.png");
