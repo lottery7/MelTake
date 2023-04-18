@@ -9,10 +9,10 @@
 #include <QVector>
 #include <QWidget>
 
-// #include <QOpenGLWidget>
-// #include <QOpenGLFunctions>
+#include <complex>
 
 #include <fftw3.h>
+
 
 namespace audio_app {
 
@@ -28,16 +28,20 @@ public:
     }
     
 protected:
-    // void initializeGL() override;
-    // void resizeGL(int, int) override;
-    // void paintGL() override;
-
     void paintEvent(QPaintEvent *) override;
 
 private:
     qint64 get_audio_pos() {
         return m_internal_player->position();
     }
+
+    static double linear_interpolation(double x1, double x2, double step, double max);
+    void draw_spectrum_peaks();
+    void draw_spectrum_rects();
+    void process_dft();
+    void compute_magnitudes();
+    void backup_spectrum();
+    void compute_spectrum();
 
     QMediaPlayer *m_internal_player;
     QAudioProbe m_probe;
@@ -46,9 +50,16 @@ private:
     double *m_dft_input;
     fftw_complex *m_dft_output;
     fftw_plan m_dft_plan;
-    qint64 m_dft_input_index;
 
-    QQueue<double> m_samples_queue;
+    QVector<double> m_magnitudes;
+    QVector<double> m_old_spectrum;
+    QVector<double> m_spectrum;
+    QQueue<double> m_collected_samples;
+
+    bool m_new_samples_arrived;
+    qint32 m_frames_stacked;
+    qint32 m_max_frames_stacked;
+    QTimer m_update_timer;
 
 private slots:
     void process_buffer(const QAudioBuffer &buffer);

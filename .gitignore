@@ -4,3 +4,4 @@ Makefile*
 release/*
 debug/*
 .vscode/*
+ui_mainwindow.h
