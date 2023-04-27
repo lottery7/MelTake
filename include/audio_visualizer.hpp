@@ -1,16 +1,16 @@
-#ifndef AUDIO_VISUALIZER_H
-#define AUDIO_VISUALIZER_H
+#ifndef AUDIO_VISUALIZER_HPP
+#define AUDIO_VISUALIZER_HPP
 
 
+#include "audio_constants.hpp"
+// #include "audio_decoder.hpp"
 #include <QAudioProbe>
 #include <QMediaPlayer>
 #include <QTimer>
-#include <QQueue>
 #include <QVector>
+#include <QList>
 #include <QWidget>
-
 #include <complex>
-
 #include <fftw3.h>
 
 
@@ -21,50 +21,50 @@ class audio_visualizer : public QWidget {
 
 public:
     explicit audio_visualizer(QWidget *parent = nullptr);
+    void set_player(QMediaPlayer *player);
+    static float linear_interpolation(float x1, float x2, float step, float max);
+    static float to_decibels(float value);
 
-    void set_media_player(QMediaPlayer *player) {
-        m_internal_player = player;
-        m_probe.setSource(m_internal_player);
-    }
+public slots:
+    void add_sample(SAMPLE_TYPE sample);
+    void reset_buffers();
     
 protected:
     void paintEvent(QPaintEvent *) override;
 
-private:
-    qint64 get_audio_pos() {
-        return m_internal_player->position();
-    }
+private slots:
+    void process_buffer(const QAudioBuffer &buffer);
 
-    static double linear_interpolation(double x1, double x2, double step, double max);
-    void draw_spectrum_peaks();
-    void draw_spectrum_rects();
+private:
+    void draw_rects();
+    void draw_info();
     void process_dft();
     void compute_magnitudes();
     void backup_spectrum();
     void compute_spectrum();
+    qint64 get_audio_position();
 
-    QMediaPlayer *m_internal_player;
+    QMediaPlayer *m_player;
+    // audio_decoder m_decoder;
     QAudioProbe m_probe;
-    QAudioFormat m_audio_format;
 
-    double *m_dft_input;
-    fftw_complex *m_dft_output;
-    fftw_plan m_dft_plan;
+    float *m_dft_input;
+    fftwf_complex *m_dft_output;
+    fftwf_plan m_dft_plan;
 
-    QVector<double> m_magnitudes;
-    QVector<double> m_old_spectrum;
-    QVector<double> m_spectrum;
-    QQueue<double> m_collected_samples;
+    QVector<SAMPLE_TYPE> m_samples_buffer;
+    qint64 m_first_sample_index;
+    QVector<float> m_magnitudes;
+    QVector<QList<float>> m_spectrum_values;
+    QVector<float> m_spectrum;
+    QVector<float> m_old_spectrum;
+    QVector<float> m_frequency_bins;
 
-    bool m_new_samples_arrived;
-    qint32 m_frames_stacked;
-    qint32 m_max_frames_stacked;
-    QTimer m_update_timer;
-
-private slots:
-    void process_buffer(const QAudioBuffer &buffer);
+    QElapsedTimer m_fps_timer;
+    QElapsedTimer m_delay_timer;
 };
+
 
 }  // namespace audio_app
 
-#endif  // AUDIO_VISUALIZER_H
+#endif  // AUDIO_VISUALIZER_HPP

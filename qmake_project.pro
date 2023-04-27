@@ -13,13 +13,16 @@ SOURCES += \
     src/settings_functions.cpp \
     src/audio_visualizer.cpp
 
+INCLUDEPATH += include
+
 HEADERS += \
     mainwindow.h \
     include/fwd.hpp \
     include/playlist_structure.hpp \
     include/settings_structure.hpp \
     include/track_structure.hpp \
-    include/audio_visualizer.hpp 
+    include/audio_constants.hpp \
+    include/audio_visualizer.hpp
     
 FORMS += \
     mainwindow.ui
@@ -38,4 +41,4 @@ INCLUDEPATH += D:\tools\cpp-libs\taglib\include
 
 # Link FFTW3
 INCLUDEPATH += D:/tools/cpp-libs/fftw/include
-LIBS += -LD:/tools/cpp-libs/fftw/bin -lfftw3-3  # using the "Direct linking", mingw feature
+LIBS += -LD:/tools/cpp-libs/fftw/bin -lfftw3f-3  # using the "Direct linking", mingw feature

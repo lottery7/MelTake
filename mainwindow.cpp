@@ -49,8 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // визуализатор
     m_visualizer = new audio_app::audio_visualizer;
-    m_visualizer->set_media_player(m_player);
-    m_visualizer->resize(800, 320);
+    m_visualizer->set_player(m_player);
     m_visualizer->show();
 
     // установка дефолтной обложки
