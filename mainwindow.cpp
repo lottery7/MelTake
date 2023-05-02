@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent)
     m_playlist->setPlaybackMode(QMediaPlaylist::Loop);
 
     // визуализатор
-    m_visualizer = new audio_app::audio_visualizer;
+    m_visualizer = new audio_app::audio_visualizer();
     m_visualizer->set_player(m_player);
     m_visualizer->show();
 
