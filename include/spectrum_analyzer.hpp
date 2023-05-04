@@ -15,9 +15,11 @@ public:
     audio_decoder &get_decoder();
     void update_frequency_bins();
     QVector<double> get_spectrum();
+    double get_max_magnitude();
 
 private:
     audio_decoder m_decoder;
+    double m_max_magnitude;
     QVector<double> m_frequency_bins;
 };
 

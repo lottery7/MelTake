@@ -39,7 +39,7 @@ void audio_decoder::set_player(QMediaPlayer *player) {
         player, SIGNAL(positionChanged(qint64)), this,
         SLOT(set_audio_position(qint64))
     );
-    player->setNotifyInterval(0);
+    player->setNotifyInterval(5);
 
     m_probe.setSource(player);
     connect(
@@ -79,13 +79,14 @@ void audio_decoder::process_buffer(const QAudioBuffer &buffer) {
 void audio_decoder::process_fft() {
     qint64 audio_pos = m_audio_position + DELAY;
 
-    if (audio_pos >= m_samples_buffer.size() + m_first_sample_index) {
-        return;
-    }
+    // if (audio_pos >= m_samples_buffer.size() + m_first_sample_index) {
+    //     qDebug("Audio is too fast: delay is %lld", audio_pos - m_samples_buffer.size() - m_first_sample_index);
+    //     return;
+    // }
 
     for (int i = 0; i < FFT_SIZE; ++i) {
         qint64 buff_index = audio_pos - FFT_SIZE + i + 1 - m_first_sample_index;
-        if (buff_index >= 0) {
+        if (buff_index >= 0 && buff_index < m_samples_buffer.size()) {
             m_fft_input[2 * i] = m_samples_buffer[buff_index] * get_window(i);
             m_fft_input[2 * i + 1] = 0;
         }
@@ -114,12 +115,16 @@ double audio_decoder::get_window(int n) {
 }
 
 void audio_decoder::reset_buffers() {
-    m_samples_buffer.clear();
+    m_samples_buffer.resize(0);
     m_first_sample_index = 0;
 }
 
 void audio_decoder::set_audio_position(qint64 new_position) {
-    m_audio_position = qRound(new_position * SAMPLE_RATE / 1'000.0);
+    double new_position_samples = qFloor(new_position * SAMPLE_RATE / 1'000.0);
+    if (new_position_samples < m_audio_position) {
+        reset_buffers();
+    }
+    m_audio_position = new_position_samples;
 }
 
 }  // namespace audio_app
