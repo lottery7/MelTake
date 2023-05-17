@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/cover.png</file>
-        <file>resources/vshader.vert</file>
-        <file>resources/fshader.frag</file>
     </qresource>
 </RCC>

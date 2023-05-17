@@ -6,11 +6,14 @@ namespace audio_app {
 extern const int FFT_SIZE;
 extern const int SAMPLE_RATE;
 extern const int SPECTRUM_SIZE = 40;
-const double FREQ_MIN = 20;
-const double FREQ_MAX = 3'000;
+const double FREQ_MIN = 32;
+const double FREQ_MAX = 4'000;
 
 spectrum_analyzer::spectrum_analyzer(QObject *parent)
-    : QObject(parent), m_decoder(this), m_frequency_bins(SPECTRUM_SIZE + 1) {
+    : QObject(parent),
+      m_decoder(this),
+      m_max_magnitude(),
+      m_frequency_bins(SPECTRUM_SIZE + 1) {
     update_frequency_bins();
 }
 
@@ -19,10 +22,11 @@ audio_decoder &spectrum_analyzer::get_decoder() {
 }
 
 void spectrum_analyzer::update_frequency_bins() {
-    double base = qPow(FREQ_MAX / FREQ_MIN, 1.f / (SPECTRUM_SIZE - 1));
+    double base = qPow(FREQ_MAX / FREQ_MIN, 1.f / (SPECTRUM_SIZE - 2));
 
-    m_frequency_bins[0] = FREQ_MIN;
-    for (int i = 0; i < SPECTRUM_SIZE - 1; ++i) {
+    m_frequency_bins[0] = 0;
+    m_frequency_bins[1] = FREQ_MIN;
+    for (int i = 1; i < SPECTRUM_SIZE - 1; ++i) {
         m_frequency_bins[i + 1] = m_frequency_bins[i] * base;
     }
     m_frequency_bins[SPECTRUM_SIZE] = SAMPLE_RATE / 2;

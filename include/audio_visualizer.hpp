@@ -4,12 +4,15 @@
 #include <fftw3.h>
 #include <QAudioProbe>
 #include <QElapsedTimer>
+#include <QFileSystemWatcher>
 #include <QList>
 #include <QMediaPlayer>
 #include <QOpenGLBuffer>
-#include <QOpenGLShaderProgram>
 #include <QOpenGLFunctions>
+#include <QOpenGLShader>
+#include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
+#include <QString>
 #include <QTimer>
 #include <QVector>
 #include <QWidget>
@@ -21,10 +24,7 @@ class audio_visualizer : public QOpenGLWidget, private QOpenGLFunctions {
     Q_OBJECT
 
 public:
-    explicit audio_visualizer(
-        QWidget *parent = nullptr,
-        QMediaPlayer *player = nullptr
-    );
+    explicit audio_visualizer(QWidget *parent = nullptr);
     ~audio_visualizer();
     void set_player(QMediaPlayer *player);
 
@@ -40,17 +40,20 @@ protected:
     void resizeGL(int w, int h) override;
     void paintGL() override;
 
+private slots:
+    void compile_fragment_shader();
+
 private:
-    void draw_rects();
     void draw_info();
     void update_spectrum();
+    void print_error(const QString &error) const;
 
-    spectrum_analyzer m_spectrum_analyzer;
     QMediaPlayer::State m_audio_state;
     int m_audio_volume;
     double m_audio_position;
     qint64 m_audio_duration;
 
+    spectrum_analyzer m_spectrum_analyzer;
     QVector<QList<double>> m_spectrum_buffer;
     QVector<float> m_spectrum;
 
@@ -64,7 +67,10 @@ private:
     QElapsedTimer m_time;
 
     QOpenGLBuffer m_vertex_buffer;
+    QOpenGLShader *m_fragment_shader;
     QOpenGLShaderProgram m_shader_program;
+
+    QFileSystemWatcher m_watcher;
 };
 
 }  // namespace audio_app

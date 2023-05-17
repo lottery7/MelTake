@@ -22,19 +22,20 @@ public:
     );
     void set_player(QMediaPlayer *player);
     QVector<double> get_magnitudes();
+    double hamming(int n);
     ~audio_decoder();
 
 private slots:
     void process_buffer(const QAudioBuffer &buffer);
-    void reset_buffers();
+    void reset_sample_buffer();
     void set_audio_position(qint64 new_position);
 
 private:
     void process_fft();
-    double get_window(int n);
 
     QAudioProbe m_probe;
     qint64 m_audio_position;
+    qint64 m_prev_buffer_start_time;
 
     double *m_fft_input;
     fftw_complex *m_fft_output;

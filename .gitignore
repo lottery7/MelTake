@@ -5,3 +5,5 @@ release/*
 debug/*
 .vscode/*
 ui_mainwindow.h
+*.Debug
+*.Release
