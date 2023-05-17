@@ -1,5 +1,5 @@
 #version 330 core
-out vec3 frag_color;
+out vec4 frag_color;
 
 
 /********** GLOBALS **********/
@@ -195,5 +195,5 @@ vec3 render(vec2 uv) {
 
 void main() {
     vec2 uv = get_normalized_coords();
-    frag_color = render(uv);
+    frag_color = vec4(render(uv), 1.);
 }
