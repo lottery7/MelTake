@@ -2,7 +2,6 @@
 #define AUDIO_VISUALIZER_HPP
 
 #include <fftw3.h>
-#include <QAudioProbe>
 #include <QElapsedTimer>
 #include <QFileSystemWatcher>
 #include <QList>
@@ -26,51 +25,50 @@ class audio_visualizer : public QOpenGLWidget, private QOpenGLFunctions {
 public:
     explicit audio_visualizer(QWidget *parent = nullptr);
     ~audio_visualizer();
+
     void set_player(QMediaPlayer *player);
+    void set_fragment_shader_path(const QString &path);
 
 public slots:
     void clear_buffer();
-    void set_audio_state(QMediaPlayer::State new_state);
-    void set_audio_volume(int new_volume);
-    void set_audio_position(qint64 new_position);
-    void set_audio_duration(qint64 new_duration);
 
 protected:
     void initializeGL() override;
-    void resizeGL(int w, int h) override;
+    void resizeGL(int width, int height) override;
     void paintGL() override;
 
 private slots:
-    void compile_fragment_shader();
+    bool compile_fragment_shader();
 
 private:
-    void draw_info();
+    bool should_update();
     void update_spectrum();
-    void print_error(const QString &error) const;
+    void update_fps();
+    void draw();
+    void print_debug(const QString &error) const;
 
-    QMediaPlayer::State m_audio_state;
-    int m_audio_volume;
-    double m_audio_position;
-    qint64 m_audio_duration;
+    const QMediaPlayer *m_player;
 
     spectrum_analyzer m_spectrum_analyzer;
+    qint32 m_spectrum_buffer_size;
     QVector<QList<double>> m_spectrum_buffer;
     QVector<float> m_spectrum;
 
-    qint64 m_nsecs_between_frames;
+    /* Fields for FPS control */
     qint64 m_fps;
-    qint64 m_time_sum;
+    qint64 m_fps_limit;
     qint64 m_fps_counter;
-
-    QTimer m_update_timer;
     QElapsedTimer m_fps_timer;
-    QElapsedTimer m_time;
+    qint64 m_nsecs_between_frames;
+    qint64 m_time_sum;
 
+    QString m_fragment_shader_path;
     QOpenGLBuffer m_vertex_buffer;
     QOpenGLShader *m_fragment_shader;
     QOpenGLShaderProgram m_shader_program;
 
     QFileSystemWatcher m_watcher;
+    QElapsedTimer m_time;
 };
 
 }  // namespace audio_app

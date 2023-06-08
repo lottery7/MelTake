@@ -16,25 +16,30 @@ class audio_decoder : public QObject {
     Q_OBJECT
 
 public:
-    explicit audio_decoder(
-        QObject *parent = nullptr,
-        QMediaPlayer *player = nullptr
-    );
-    void set_player(QMediaPlayer *player);
-    QVector<double> get_magnitudes();
-    double hamming(int n);
+    explicit audio_decoder(QObject *parent = nullptr);
     ~audio_decoder();
+
+    bool set_player(QMediaPlayer *player);
+
+    void update_magnitudes();
+    QVector<double> get_magnitudes() const;
+
+    QAudioFormat get_audio_format() const;
+
+    double get_cached_window_value(int n);
 
 private slots:
     void process_buffer(const QAudioBuffer &buffer);
-    void reset_sample_buffer();
-    void set_audio_position(qint64 new_position);
+    void reset_samples_buffer();
+
+    qint64 get_audio_position() const;
 
 private:
     void process_fft();
 
     QAudioProbe m_probe;
-    qint64 m_audio_position;
+    const QMediaPlayer *m_player;
+    QAudioFormat m_current_audio_format;
     qint64 m_prev_buffer_start_time;
 
     double *m_fft_input;

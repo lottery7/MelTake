@@ -10,6 +10,7 @@
 #include <QPainter>
 #include <QPainterPath>
 #include <QStringList>
+#include <QSurface>
 #include <QVector>
 #include <QWidget>
 #include <QtMath>
@@ -22,47 +23,33 @@
 // 0) Add colors from the cover
 // 1) Add real-time shader compiling on change | DONE!
 // 1.5) Prevent crashing on real-time shader coding
+// 2) Remove global constants
+// 3) Add settings panel
+// 4) Update classes
 
 namespace audio_app {
 
 extern const int SPECTRUM_SIZE;
-const int FPS_LIMIT = 60;
-const int MEAN_SIZE = 2;
-const QString FRAGMENT_SHADER_PATH("../shaders/main.frag");
-const QString VERTEX_SHADER_CODE = (
-"#version 330\n"
-"layout(location = 0) in vec2 vertex_position;\n"
-"void main() {\n"
-"    gl_Position = vec4(vertex_position, 0, 1);"
-"}\n"
-);
 
 audio_visualizer::audio_visualizer(QWidget *parent)
     : QOpenGLWidget(parent),
-      m_audio_volume(),
-      m_audio_position(),
-      m_audio_duration(),
+      m_player(),
       m_spectrum_analyzer(this),
+      m_spectrum_buffer_size(30),
       m_spectrum_buffer(SPECTRUM_SIZE),
       m_spectrum(SPECTRUM_SIZE),
-      m_nsecs_between_frames(),
       m_fps(),
-      m_time_sum(),
+      m_fps_limit(240),
       m_fps_counter(),
-      m_update_timer(this),
+      m_nsecs_between_frames(),
+      m_time_sum(),
       m_fragment_shader(),
-      m_watcher(QStringList(FRAGMENT_SHADER_PATH), this) {
+      m_watcher(this) {
     setWindowTitle("Visualizer");
-
     connect(
-        &m_watcher, SIGNAL(fileChanged(const QString &)), this,
+        &m_watcher, SIGNAL(fileChanged(QString)), this,
         SLOT(compile_fragment_shader())
     );
-
-    m_update_timer.setTimerType(Qt::TimerType::PreciseTimer);
-    connect(&m_update_timer, SIGNAL(timeout()), this, SLOT(update()));
-
-    m_update_timer.start(1000 / FPS_LIMIT);
     m_fps_timer.start();
     m_time.start();
 }
@@ -73,28 +60,17 @@ audio_visualizer::~audio_visualizer() {
 }
 
 void audio_visualizer::set_player(QMediaPlayer *player) {
-    if (!player) {
-        print_error("Player is a nullptr");
-        return;
-    }
-
-    connect(
-        player, SIGNAL(stateChanged(QMediaPlayer::State)), this,
-        SLOT(set_audio_state(QMediaPlayer::State))
-    );
-    connect(
-        player, SIGNAL(volumeChanged(int)), this, SLOT(set_audio_volume(int))
-    );
-    connect(
-        player, SIGNAL(positionChanged(qint64)), this,
-        SLOT(set_audio_position(qint64))
-    );
-    connect(
-        player, SIGNAL(durationChanged(qint64)), this,
-        SLOT(set_audio_duration(qint64))
-    );
-
+    m_player = player;
     m_spectrum_analyzer.get_decoder().set_player(player);
+}
+
+void audio_visualizer::set_fragment_shader_path(const QString &path) {
+    if (m_watcher.files().contains(m_fragment_shader_path)) {
+        m_watcher.removePath(m_fragment_shader_path);
+    }
+    m_fragment_shader_path = path;
+    m_watcher.addPath(m_fragment_shader_path);
+    compile_fragment_shader();
 }
 
 void audio_visualizer::initializeGL() {
@@ -104,12 +80,13 @@ void audio_visualizer::initializeGL() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     if (!m_vertex_buffer.create()) {
-        print_error("Failed to create vertex buffer");
-        close();
+        print_debug("Failed to create vertex buffer");
+        return;
     }
+
     if (!m_vertex_buffer.bind()) {
-        print_error("Failed to bind vertex buffer");
-        close();
+        print_debug("Failed to bind vertex buffer");
+        return;
     }
 
     const QVector<GLfloat> vertices = {
@@ -120,56 +97,161 @@ void audio_visualizer::initializeGL() {
     );
 
     if (!m_shader_program.addShaderFromSourceCode(
-            QOpenGLShader::Vertex, VERTEX_SHADER_CODE
+            QOpenGLShader::Vertex,
+            "#version 330\n"
+            "layout(location = 0) in vec2 vertex_position;\n"
+            "void main() {\n"
+            "   gl_Position = vec4(vertex_position, 0, 1);\n"
+            "}\n"
         )) {
-        print_error("Failed to load vertex shader");
-        close();
+        print_debug("Failed to load vertex shader");
+        return;
     }
 
     m_fragment_shader = new QOpenGLShader(QOpenGLShader::Fragment, this);
     if (!m_shader_program.addShader(m_fragment_shader)) {
-        print_error("Failed to add fragment shader");
-        close();
+        print_debug("Failed to load fragment shader");
+        return;
     }
 
-    compile_fragment_shader();
+    if (!compile_fragment_shader()) {
+        print_debug("Failed to compile fragment shader");
+        return;
+    }
 }
 
-void audio_visualizer::resizeGL(int w, int h) {
-    glViewport(0, 0, w, h);
+void audio_visualizer::resizeGL(int width, int height) {
+    glViewport(0, 0, width, height);
 }
 
 void audio_visualizer::paintGL() {
     bool has_updated = false;
-    if (m_audio_state == QMediaPlayer::PlayingState &&
-        m_fps_timer.nsecsElapsed() >= m_nsecs_between_frames) {
-        m_time_sum += m_fps_timer.nsecsElapsed();
-        m_fps_timer.restart();
-        ++m_fps_counter;
-        if (m_time_sum >= 1e9) {
-            m_fps = 1e9 * m_fps_counter / m_time_sum;
-            m_time_sum = 0;
-            m_fps_counter = 0;
-        }
-
+    if (should_update()) {
+        update_fps();
         update_spectrum();
         has_updated = true;
     }
 
+    draw();
+
+    if (has_updated) {
+        m_nsecs_between_frames =
+            qMax(1'000'000'000 / m_fps_limit - m_fps_timer.nsecsElapsed(), 0ll);
+    }
+
+    emit update();
+}
+
+bool audio_visualizer::compile_fragment_shader() {
+    if (m_fragment_shader_path.isEmpty()) {
+        print_debug("The fragment shader path is empty");
+        return false;
+    }
+
+    if (!QFile::exists(m_fragment_shader_path)) {
+        print_debug(
+            "Failed to load fragment shader from \"" + m_fragment_shader_path +
+            "\""
+        );
+        return false;
+    }
+
+    // Create new temporary shader to prevent OpenGL crashing (doesn't work)
+    QOpenGLShader *new_shader =
+        new QOpenGLShader(QOpenGLShader::Fragment, this);
+
+    if (!new_shader->compileSourceFile(m_fragment_shader_path)) {
+        delete new_shader;
+        return false;
+    }
+
+    // Delete old shader and add the new one
+    m_shader_program.removeShader(m_fragment_shader);
+    delete m_fragment_shader;
+    m_fragment_shader = new_shader;
+    m_shader_program.addShader(m_fragment_shader);
+
+    if (!m_shader_program.link()) {
+        print_debug("Failed to link shader program");
+        return false;
+    }
+
+    return true;
+}
+
+void audio_visualizer::clear_buffer() {
+    for (auto &values : m_spectrum_buffer) {
+        values.clear();
+    }
+}
+
+void audio_visualizer::update_spectrum() {
+    Q_ASSERT(m_spectrum.size() == SPECTRUM_SIZE);
+    Q_ASSERT(m_spectrum.size() == m_spectrum_buffer.size());
+
+    m_spectrum_analyzer.update_spectrum();
+    QVector<double> spectrum = m_spectrum_analyzer.get_spectrum();
+
+    Q_ASSERT(spectrum.size() == m_spectrum.size());
+
+    // Remove redundant values in spectrum buffer
+    for (int i = 0; i < m_spectrum_buffer.size(); ++i) {
+        m_spectrum_buffer[i].append(spectrum[i]);
+        while (m_spectrum_buffer[i].size() > m_spectrum_buffer_size) {
+            m_spectrum_buffer[i].removeFirst();
+        }
+    }
+
+    // Calculate and smooth spectrum
+    for (int i = 0; i < m_spectrum_buffer.size(); ++i) {
+        m_spectrum[i] = 0;
+        for (int j = 0; j < m_spectrum_buffer[i].size(); j++) {
+            m_spectrum[i] += m_spectrum_buffer[i][j] *
+                             pow((j + 1.) / m_spectrum_buffer[i].size(), 4.);
+        }
+    }
+}
+
+bool audio_visualizer::should_update() {
+    return m_player->state() == QMediaPlayer::PlayingState &&
+           m_fps_timer.nsecsElapsed() >= m_nsecs_between_frames;
+}
+
+void audio_visualizer::update_fps() {
+    m_time_sum += m_fps_timer.nsecsElapsed();
+    m_fps_timer.restart();
+    m_fps_counter++;
+
+    if (m_time_sum >= 1e9) {
+        m_fps = 1e9 * m_fps_counter / m_time_sum;
+        m_time_sum = 0;
+        m_fps_counter = 0;
+    }
+}
+
+void audio_visualizer::draw() {
+    makeCurrent();
+
+    if (!m_shader_program.isLinked()) {
+        print_debug("Shader program is not linked");
+        return;
+    }
+
     if (!m_shader_program.bind()) {
-        print_error("Failed to bind shader program");
+        print_debug("Failed to bind shader program");
         return;
     }
 
     if (!m_vertex_buffer.bind()) {
-        print_error("Failed to bind vertex buffer");
+        print_debug("Failed to bind vertex buffer");
         return;
     }
 
     m_shader_program.enableAttributeArray(0);
     m_shader_program.setAttributeBuffer(0, GL_FLOAT, 0, 2, 2 * sizeof(GLfloat));
 
-    m_shader_program.setUniformValue("u_time", m_time.elapsed() / 1'000.f);
+    // Uniforms
+    m_shader_program.setUniformValue("u_time", m_time.elapsed() * 1e-3f);
     m_shader_program.setUniformValue(
         "u_resolution", QVector2D(width(), height())
     );
@@ -181,93 +263,14 @@ void audio_visualizer::paintGL() {
         "u_max_magnitude", (GLfloat)m_spectrum_analyzer.get_max_magnitude()
     );
     m_shader_program.setUniformValue(
-        "u_audio_position", (GLfloat)m_audio_position
+        "u_audio_position", (GLfloat)m_player->position() / m_player->duration()
     );
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    if (has_updated) {
-        m_nsecs_between_frames =
-            qMax(1'000'000'000 / FPS_LIMIT - m_fps_timer.nsecsElapsed(), 0ll);
-    }
 }
 
-void audio_visualizer::compile_fragment_shader() {
-    // Create new temporary shader to prevent OpenGL crashing
-    QOpenGLShader *new_shader =
-        new QOpenGLShader(QOpenGLShader::Fragment, this);
-    if (!new_shader->compileSourceFile(FRAGMENT_SHADER_PATH)) {
-        print_error(m_fragment_shader->log());
-        delete new_shader;
-        return;
-    }
-
-    m_shader_program.removeShader(m_fragment_shader);
-    delete m_fragment_shader;
-    m_fragment_shader = new_shader;
-    m_shader_program.addShader(m_fragment_shader);
-
-    if (!m_shader_program.link()) {
-        print_error("Failed to link shader program");
-        return;
-    }
-}
-
-void audio_visualizer::clear_buffer() {
-    for (auto &values : m_spectrum_buffer) {
-        values.clear();
-    }
-}
-
-void audio_visualizer::set_audio_state(QMediaPlayer::State new_state) {
-    m_audio_state = new_state;
-}
-
-void audio_visualizer::set_audio_volume(int new_volume) {
-    m_audio_volume = new_volume;
-}
-
-void audio_visualizer::set_audio_position(qint64 new_position) {
-    m_audio_position = (double)new_position / m_audio_duration;
-}
-
-void audio_visualizer::set_audio_duration(qint64 new_duration) {
-    m_audio_duration = new_duration;
-}
-
-void audio_visualizer::draw_info() {
-    QPainter painter(this);
-    painter.setPen(Qt::black);
-    std::string text(std::string("FPS: ") + std::to_string(m_fps));
-    painter.drawText(0, fontMetrics().height(), QString(text.c_str()));
-}
-
-void audio_visualizer::update_spectrum() {
-    Q_ASSERT(m_spectrum.size() == SPECTRUM_SIZE);
-    Q_ASSERT(m_spectrum.size() == m_spectrum_buffer.size());
-
-    QVector<double> spectrum = m_spectrum_analyzer.get_spectrum();
-
-    Q_ASSERT(spectrum.size() == m_spectrum.size());
-
-    for (int i = 0; i < m_spectrum_buffer.size(); ++i) {
-        m_spectrum_buffer[i].append(spectrum[i]);
-        while (m_spectrum_buffer[i].size() > MEAN_SIZE) {
-            m_spectrum_buffer[i].removeFirst();
-        }
-    }
-
-    for (int i = 0; i < m_spectrum_buffer.size(); ++i) {
-        qint64 sum = 0;
-        for (double spectrum_value : m_spectrum_buffer[i]) {
-            sum += spectrum_value;
-        }
-        m_spectrum[i] = sum / m_spectrum_buffer[i].size();
-    }
-}
-
-void audio_visualizer::print_error(const QString &error) const {
-    qDebug() << "audio_visualizer: " << error;
+void audio_visualizer::print_debug(const QString &text) const {
+    qDebug() << "audio_visualizer: " << text;
 }
 
 }  // namespace audio_app

@@ -33,15 +33,9 @@ FORMS += \
 RESOURCES += \
     resources.qrc
 
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
-
-# напиши свой путь к taglib
-win32: LIBS += -LD:\tools\cpp-libs\taglib\lib -ltag
-
-INCLUDEPATH += D:\tools\cpp-libs\taglib\include
+LIBS += -LPATH/TO/TAGLIB/LIB -ltag
+INCLUDEPATH += PATH/TO/TAGLIB/HEADERS
 
 # Link FFTW3
-INCLUDEPATH += D:/tools/cpp-libs/fftw/include
-LIBS += -LD:/tools/cpp-libs/fftw/bin -lfftw3-3  # using the "Direct linking", mingw feature
+LIBS += -LPATH/TO/FFTW/LIB -lfftw3-3  # using the "Direct linking", mingw feature
+INCLUDEPATH += PATH/TO/FFTW/HEADERS

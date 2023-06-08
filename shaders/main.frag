@@ -6,21 +6,22 @@ out vec4 frag_color;
 
 uniform float u_time;
 uniform vec2 u_resolution;
-uniform float u_spectrum[40];
+uniform float u_spectrum[1000];
 uniform int u_spectrum_size;
 uniform float u_max_magnitude;
 uniform float u_audio_position;
 
 
 const float PI = 3.14159265359;
+const float BRIGHTNESS = .7;
 const vec3 COLOR_PALETTE[] = {
-    vec3(.07, .07, .23),
-    vec3(.02, .85, .91),
-    vec3(1., .16, .43)
+    vec3(.07, .07, .23) * (1. + BRIGHTNESS),
+    vec3(.02, .85, .91) * (1. + BRIGHTNESS),
+    vec3(1., .16, .43) * (1. + BRIGHTNESS)
 };
-const float BAR_WIDTH = .2;
-const float BAR_HEIGHT = .5;
-const float FADE_STRENGTH = .05;
+const float BAR_WIDTH = .1;
+const float BAR_HEIGHT = .2;
+const float FADE_STRENGTH = .0;
 float BLUR = .001;
 
 
@@ -36,14 +37,19 @@ vec2 get_normalized_coords() {
     return (gl_FragCoord.xy - .5 * u_resolution) / min(u_resolution.x, u_resolution.y);
 }
 
-float get_scaled_magnitude(float x) {
-    return smoothstep(.0, 4e2, pow(x, .3));
+float scale_magnitude(float x) {
+    return smoothstep(10., .26e4, pow(x, .4));
 }
 
-vec2 get_scaled_coords(vec2 uv) {
+vec2 scale_coords(vec2 uv) {
     uv -= vec2(.0, -.12 + .02 * sin(u_time));
-    uv /= smoothstep(.0, .65, get_scaled_magnitude(u_max_magnitude)) + 1.;
+    uv /= 1.5;
+    // uv /= smoothstep(.08, .5, scale_magnitude(u_max_magnitude)) + 1.5;
     return uv;
+}
+
+float get_scaled_blur() {
+    return max(BLUR, FADE_STRENGTH * scale_magnitude(u_max_magnitude));
 }
 
 // COLORS
@@ -61,7 +67,7 @@ vec3 get_circle_color() {
 // CONVERSIONS
 
 vec3 magnitude_to_color(float magnitude) {
-    return get_color(smoothstep(.02, .4, get_scaled_magnitude(magnitude)));
+    return get_color(smoothstep(.06, .48, scale_magnitude(magnitude)));
 }
 
 float angle_to_index(float ang, float offset) {
@@ -80,9 +86,10 @@ float index_to_angle(float i, float offset) {
 
 // VISUALIZATION
 
-vec4 vis_sparkle(vec2 uv, vec2 p, float r) {
+float vis_sparkle(vec2 uv, vec2 p, float r) {
     float d = length(uv - p);
-    return vec4(get_circle_color(), r / d);
+    float mask = r / d;
+    return clamp(mask, .0, 1.);
 }
 
 vec4 vis_inner_circle(vec2 uv, float max_r, float w) {
@@ -91,18 +98,6 @@ vec4 vis_inner_circle(vec2 uv, float max_r, float w) {
     float s2 = smoothstep(max_r + BLUR, max_r - BLUR, r);
     float c = s1 * s2;
     return vec4(get_circle_color(), c);
-}
-
-// p - coords of the middle point on the left side
-float vis_bar(vec2 uv, vec2 p, float w, float h, float a) {
-    uv = get_rotation_matrix(a) * (uv - p) + p;
-    p -= vec2(0, h / 2.);
-    float fade = max(BLUR, FADE_STRENGTH * pow(u_max_magnitude * 3.2e-8, 4.));
-    float s1 = smoothstep(p.x - BLUR, p.x + BLUR, uv.x);
-    float s2 = smoothstep(p.x + w + fade, p.x + w - fade, uv.x);
-    float s3 = smoothstep(p.y - BLUR, p.y + BLUR, uv.y);
-    float s4 = smoothstep(p.y + h + BLUR, p.y + h - BLUR, uv.y);
-    return s1 * s2 * s3 *s4;
 }
 
 vec4 vis_progress(vec2 uv, float max_r, float w) {
@@ -121,12 +116,28 @@ vec4 vis_progress(vec2 uv, float max_r, float w) {
     return vec4(get_circle_color(), c);
 }
 
+// p - coordinates of the middle point on the left side
+float vis_bar(vec2 uv, vec2 p, float w, float h, float ang) {
+    uv = get_rotation_matrix(ang) * (uv - p) + p;
+    p -= vec2(0, h / 2.);
+    // float fade = max(BLUR, FADE_STRENGTH * pow(u_max_magnitude * 3.2e-8, 4.));
+    BLUR = get_scaled_blur();
+    float s1 = smoothstep(p.x - BLUR, p.x + BLUR, uv.x);
+    // float s2 = smoothstep(p.x + w + fade, p.x + w - fade, uv.x);
+    float s2 = smoothstep(p.x + w + BLUR, p.x + w - BLUR, uv.x);
+    float s3 = smoothstep(p.y - BLUR, p.y + BLUR, uv.y);
+    float s4 = smoothstep(p.y + h + BLUR, p.y + h - BLUR, uv.y);
+    float mask = s1 * s2 * s3 * s4;
+    mask += vis_sparkle(uv, p - vec2(.0, -h / 2.), .00125);
+    return mask;
+}
+
 float vis_bar_from_index(vec2 uv, float radius, float offset, float index, out float magnitude) {
     magnitude = u_spectrum[
         int(u_spectrum_size - abs(index - u_spectrum_size))
     ];
 
-    float w = get_scaled_magnitude(magnitude) * BAR_HEIGHT;
+    float w = scale_magnitude(magnitude) * BAR_HEIGHT;
     float h = BAR_WIDTH / u_spectrum_size;
 
     float ang = index_to_angle(floor(index), offset);
@@ -153,33 +164,39 @@ vec4 vis_bars(vec2 uv, float radius, float offset) {
     float bar_mask2 = vis_bar_from_index(uv, radius, offset, index2, magnitude2);
 
 
+    vec4 color = vec4(0);
+    vec4 color1 = vec4(magnitude_to_color(magnitude1), bar_mask1);
+    vec4 color2 = vec4(magnitude_to_color(magnitude2), bar_mask2);
     if (bar_mask1 > bar_mask2) {
-        return vec4(magnitude_to_color(magnitude1), bar_mask1);
+        color = color1;
+    } else {
+        color = color2;
     }
 
-    return vec4(magnitude_to_color(magnitude2), bar_mask2);
+    return color;
 }
 
 // MAIN
 
 vec3 render(vec2 uv) {
     // bars
-    float radius = .1;
-    vec4 bars_color = vis_bars(get_scaled_coords(uv), radius, PI / 2.);
+    float radius = .14;
+    uv = scale_coords(uv);
+    vec4 bars_color = vis_bars(uv, radius, PI / 2.);
 
     // circle
     float inner_circle_radius = radius - .01;
     float inner_circle_width = .006;
-    vec4 inner_circle_color = vis_inner_circle(get_scaled_coords(uv), inner_circle_radius, inner_circle_width);
+    vec4 inner_circle_color = vis_inner_circle(uv, inner_circle_radius, inner_circle_width);
 
     // progress bar
     float progress_radius = inner_circle_radius - inner_circle_width;
     float progress_width = .004;
-    vec4 progress_color = vis_progress(get_scaled_coords(uv), progress_radius, progress_width);
+    vec4 progress_color = vis_progress(uv, progress_radius, progress_width);
     
     // sparkle
     // vec2 sparkle_pos = vec2(.0, -1.);
-    // vec4 sparkle_color = vis_sparkle(uv, sparkle_pos, .2* get_scaled_magnitude(u_max_magnitude));
+    // vec4 sparkle_color = vis_sparkle(uv, sparkle_pos, .2* scale_magnitude(u_max_magnitude));
 
     vec4 color = vec4(0);
     if (bars_color.a > color.a) color = bars_color;
@@ -195,5 +212,6 @@ vec3 render(vec2 uv) {
 
 void main() {
     vec2 uv = get_normalized_coords();
-    frag_color = vec4(render(uv), 1.);
+    vec3 color = render(uv);
+    frag_color = vec4(color, 1.);
 }
