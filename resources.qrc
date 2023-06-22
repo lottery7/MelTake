@@ -1,5 +1,13 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/cover.png</file>
+        <file>resources/buttons/next.png</file>
+        <file>resources/buttons/pause.png</file>
+        <file>resources/buttons/previous.png</file>
+        <file>resources/buttons/play.png</file>
+        <file>resources/buttons/volume_off.png</file>
+        <file>resources/buttons/volume_on.png</file>
+        <file>resources/buttons/loop.png</file>
+        <file>resources/buttons/random.png</file>
     </qresource>
 </RCC>
