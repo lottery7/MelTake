@@ -45,16 +45,16 @@ private slots:
 
     void delete_track_from_datafile(QString track_path_to_delete);
 
+    void change_the_displayed_track_information (int track_index_in_list);
+
 private:
     Ui::MainWindow *ui;
+    
+    QMediaPlayer *m_player;
 
-    ///            QMap<QString, TagLib::MPEG::File*> path_to_mpeg;        -     НА ПОТОМ!!!
+    QMediaPlaylist *m_playlist;
 
-    QMediaPlayer *m_player;    // пригрыватель
-
-    QMediaPlaylist *m_playlist;    // структура с обектами, которые воспроизводятся в проигрыватели
-
-    QStandardItemModel *m_playlist_model;   // структура необходимая для отображения треков в таблице треков
+    QStandardItemModel *m_playlist_model;
 
     audio_app::audio_visualizer *m_visualizer;
     
