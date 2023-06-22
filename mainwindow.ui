@@ -50,6 +50,18 @@
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">#main_layout{
+	background-color: 
+			qlineargradient(
+					spread:pad, x1:0, y1:1, x2:0, y2:0, 
+					stop:0.0 rgba(238,193,117, 255),
+					stop:0.33 rgba(238,237,176, 255),
+					stop:0.66 rgba(218,238,222, 255), 
+					stop:1.0 rgba(179,219,192, 255)
+			);
+}</string>
+  </property>
   <widget class="QWidget" name="main_layout">
    <layout class="QVBoxLayout" name="verticalLayout_2">
     <property name="spacing">
@@ -154,15 +166,23 @@
           <item>
            <layout class="QGridLayout" name="play_panel">
             <property name="sizeConstraint">
-             <enum>QLayout::SetMinimumSize</enum>
+             <enum>QLayout::SetMaximumSize</enum>
             </property>
             <property name="verticalSpacing">
              <number>0</number>
             </property>
             <item row="1" column="0">
              <widget class="QPushButton" name="previous_track_button">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+border-image: url(:/resources/buttons/previous.png);
+background: none;
+width: 30px;
+height: 30px;
+}</string>
+              </property>
               <property name="text">
-               <string>previous_track</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -184,18 +204,47 @@
             </item>
             <item row="0" column="1">
              <widget class="QPushButton" name="play_pause_button">
+              <property name="enabled">
+               <bool>true</bool>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+border-image: url(:/resources/buttons/play.png);
+background: none;
+width: 40px;
+height: 40px;
+}
+
+QPushButton:checked
+{
+   border-image: url(:/resources/buttons/pause.png);
+}
+
+</string>
+              </property>
               <property name="text">
-               <string>play_pause</string>
+               <string/>
               </property>
               <property name="checkable">
                <bool>true</bool>
+              </property>
+              <property name="checked">
+               <bool>false</bool>
               </property>
              </widget>
             </item>
             <item row="1" column="2">
              <widget class="QPushButton" name="next_track_button">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+border-image: url(:/resources/buttons/next.png);
+background: none;
+width: 30px;
+height: 30px;
+}</string>
+              </property>
               <property name="text">
-               <string>next_track</string>
+               <string/>
               </property>
              </widget>
             </item>
@@ -204,22 +253,72 @@
           <item>
            <layout class="QGridLayout" name="gridLayout">
             <property name="sizeConstraint">
-             <enum>QLayout::SetMinimumSize</enum>
+             <enum>QLayout::SetDefaultConstraint</enum>
             </property>
-            <item row="0" column="0">
-             <widget class="QPushButton" name="random_mode_button">
+            <item row="1" column="0">
+             <widget class="QPushButton" name="track_loop_mode_button">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+border-image: url(:/resources/buttons/loop.png);
+background: none;
+width: 30px;
+height: 30px;
+}</string>
+              </property>
               <property name="text">
-               <string>Random</string>
+               <string/>
               </property>
               <property name="checkable">
                <bool>true</bool>
               </property>
              </widget>
             </item>
-            <item row="1" column="0">
-             <widget class="QPushButton" name="track_loop_mode_button">
+            <item row="2" column="1">
+             <widget class="QSlider" name="volume_slider">
+              <property name="styleSheet">
+               <string notr="true">QSlider::groove:horizontal {
+	height: 14px;
+	background: rgba(132,184,162,255);
+	bourder: 2px gba(132,184,162,255);
+	broder-radius: 8px;
+}
+
+QSlider::handle:horizontal {
+	background: rgba(103,146,144,255);
+	border: 4px solid gba(103,146,144,255);
+	width:10px;
+	height:10px;
+	margin: -5px 0;
+border-radius: 3px;
+		
+}
+
+QSlider::sub-page:horizontal {
+    background: rgba(238,193,117,255);
+}
+
+</string>
+              </property>
+              <property name="value">
+               <number>60</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item row="0" column="0">
+             <widget class="QPushButton" name="random_mode_button">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+border-image: url(:/resources/buttons/random.png);
+background: none;
+width: 30px;
+height: 30px;
+}</string>
+              </property>
               <property name="text">
-               <string>Track Loop</string>
+               <string/>
               </property>
               <property name="checkable">
                <bool>true</bool>
@@ -227,35 +326,24 @@
              </widget>
             </item>
             <item row="2" column="0">
-             <widget class="QPushButton" name="loop_mode_button">
-              <property name="text">
-               <string>Loop</string>
-              </property>
-              <property name="checkable">
-               <bool>true</bool>
-              </property>
-              <property name="checked">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
              <widget class="QPushButton" name="mute_button">
+              <property name="styleSheet">
+               <string notr="true">QPushButton {
+	border-image: url(:/resources/buttons/volume_on.png);
+	background: none;
+
+}
+
+QPushButton:checked
+{
+   border-image: url(:/resources/buttons/volume_off.png);
+}</string>
+              </property>
               <property name="text">
-               <string>mute</string>
+               <string/>
               </property>
               <property name="checkable">
                <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="1">
-             <widget class="QSlider" name="volume_slider">
-              <property name="value">
-               <number>60</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
@@ -284,23 +372,61 @@
      </layout>
     </item>
     <item>
-     <widget class="QProgressBar" name="track_progress_bar">
-      <property name="enabled">
-       <bool>true</bool>
+     <widget class="QSlider" name="process_slyder">
+      <property name="styleSheet">
+       <string notr="true">QSlider::groove:horizontal {
+	height: 14px;
+	background: rgba(132,184,162,255);
+	bourder: 2px gba(132,184,162,255);
+	broder-radius: 8px;
+}
+
+QSlider::handle:horizontal {
+	background: rgba(103,146,144,255);
+	border: 4px solid gba(103,146,144,255);
+	width:10px;
+	height:10px;
+	margin: -5px 0;
+border-radius: 3px;
+		
+}
+
+QSlider::sub-page:horizontal {
+    background: rgba(238,193,117,255);
+}
+
+</string>
+      </property>
+      <property name="singleStep">
+       <number>20</number>
       </property>
       <property name="value">
        <number>0</number>
       </property>
-      <property name="textVisible">
+      <property name="sliderPosition">
+       <number>0</number>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="invertedAppearance">
        <bool>false</bool>
       </property>
-      <property name="format">
-       <string>%p%</string>
+      <property name="tickPosition">
+       <enum>QSlider::TicksBothSides</enum>
+      </property>
+      <property name="tickInterval">
+       <number>1</number>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QTableView" name="playlist_tabel_view"/>
+     <widget class="QTableView" name="playlist_tabel_view">
+      <property name="styleSheet">
+       <string notr="true">background-color: rgba(255, 255, 255,50);
+bourder: 5px solid rgba(255, 255, 255,220) ;</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
