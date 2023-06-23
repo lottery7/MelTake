@@ -13,7 +13,7 @@ struct playlist {
 
     playlist() = default;
 
-    explicit playlist(std::string name) : m_playlist_name(std::move(name)){};
+    explicit playlist(std::string name) : m_playlist_name(std::move(name)){}
 
     void add_new_track_to_playlist(const track &track_name);
     void add_old_track_to_playlist(const track &track_name);
