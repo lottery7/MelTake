@@ -10,12 +10,6 @@
 
 namespace audio_app {
 
-struct music_base {
-    std::vector<playlist> playlist_list;
-    settings settings_type;
-
-};
-
 struct unable_to_find_users_data : std::runtime_error {
     explicit unable_to_find_users_data()
         : std::runtime_error("Unable to find user's track data file") {
