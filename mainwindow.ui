@@ -372,6 +372,13 @@ QPushButton:checked
      </layout>
     </item>
     <item>
+     <widget class="QPushButton" name="add_playlist">
+      <property name="text">
+       <string>add_playlist</string>
+      </property>
+     </widget>
+    </item>
+    <item>
      <widget class="QSlider" name="process_slyder">
       <property name="styleSheet">
        <string notr="true">QSlider::groove:horizontal {
@@ -421,7 +428,10 @@ QSlider::sub-page:horizontal {
      </widget>
     </item>
     <item>
-     <widget class="QTableView" name="playlist_tabel_view">
+     <widget class="QTableView" name="playlists_table"/>
+    </item>
+    <item>
+     <widget class="QTableView" name="playlist_table_view">
       <property name="styleSheet">
        <string notr="true">background-color: rgba(255, 255, 255,50);
 bourder: 5px solid rgba(255, 255, 255,220) ;</string>
