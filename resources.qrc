@@ -11,5 +11,6 @@
         <file>resources/buttons/random.png</file>
         <file>resources/ghost_icon.ico</file>
         <file>resources/buttons/dots_vertical.png</file>
+        <file>shaders/main.frag</file>
     </qresource>
 </RCC>
