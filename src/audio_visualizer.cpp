@@ -20,36 +20,26 @@
 #include "spectrum_analyzer.hpp"
 
 // WIP:
-// 0) Add colors from the cover
-// 1) Add real-time shader compiling on change | DONE!
-// 1.5) Prevent crashing on real-time shader coding
-// 2) Remove global constants
-// 3) Add settings panel
-// 4) Update classes
+// * Add colors from the cover
+// * Add settings panel
 
 namespace audio_app {
-
-extern const int SPECTRUM_SIZE;
 
 audio_visualizer::audio_visualizer(QWidget *parent)
     : QOpenGLWidget(parent),
       m_player(),
       m_spectrum_analyzer(this),
-      m_spectrum_buffer_size(30),
-      m_spectrum_buffer(SPECTRUM_SIZE),
-      m_spectrum(SPECTRUM_SIZE),
+      m_spectrum_buffer_size(32),
+      m_spectrum_buffer(m_spectrum_analyzer.get_spectrum_size()),
+      m_spectrum(m_spectrum_analyzer.get_spectrum_size()),
       m_fps(),
       m_fps_limit(240),
       m_fps_counter(),
       m_nsecs_between_frames(),
       m_time_sum(),
-      m_fragment_shader(),
-      m_watcher(this) {
+      m_fragment_shader_path(":/shaders/main.frag"),
+      m_fragment_shader() {
     setWindowTitle("Visualizer");
-    connect(
-        &m_watcher, SIGNAL(fileChanged(QString)), this,
-        SLOT(compile_fragment_shader())
-    );
     m_fps_timer.start();
     m_time.start();
 }
@@ -62,15 +52,6 @@ audio_visualizer::~audio_visualizer() {
 void audio_visualizer::set_player(QMediaPlayer *player) {
     m_player = player;
     m_spectrum_analyzer.get_decoder().set_player(player);
-}
-
-void audio_visualizer::set_fragment_shader_path(const QString &path) {
-    if (m_watcher.files().contains(m_fragment_shader_path)) {
-        m_watcher.removePath(m_fragment_shader_path);
-    }
-    m_fragment_shader_path = path;
-    m_watcher.addPath(m_fragment_shader_path);
-    compile_fragment_shader();
 }
 
 void audio_visualizer::initializeGL() {
@@ -186,13 +167,8 @@ void audio_visualizer::clear_buffer() {
 }
 
 void audio_visualizer::update_spectrum() {
-    Q_ASSERT(m_spectrum.size() == SPECTRUM_SIZE);
-    Q_ASSERT(m_spectrum.size() == m_spectrum_buffer.size());
-
     m_spectrum_analyzer.update_spectrum();
     QVector<double> spectrum = m_spectrum_analyzer.get_spectrum();
-
-    Q_ASSERT(spectrum.size() == m_spectrum.size());
 
     // Remove redundant values in spectrum buffer
     for (int i = 0; i < m_spectrum_buffer.size(); ++i) {
@@ -256,9 +232,9 @@ void audio_visualizer::draw() {
         "u_resolution", QVector2D(width(), height())
     );
     m_shader_program.setUniformValueArray(
-        "u_spectrum", m_spectrum.constBegin(), SPECTRUM_SIZE, 1
+        "u_spectrum", m_spectrum.constBegin(), m_spectrum.size(), 1
     );
-    m_shader_program.setUniformValue("u_spectrum_size", SPECTRUM_SIZE);
+    m_shader_program.setUniformValue("u_spectrum_size", m_spectrum.size());
     m_shader_program.setUniformValue(
         "u_max_magnitude", (GLfloat)m_spectrum_analyzer.get_max_magnitude()
     );
