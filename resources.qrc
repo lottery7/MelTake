@@ -9,5 +9,7 @@
         <file>resources/buttons/volume_on.png</file>
         <file>resources/buttons/loop.png</file>
         <file>resources/buttons/random.png</file>
+        <file>resources/ghost_icon.ico</file>
+        <file>resources/buttons/dots_vertical.png</file>
     </qresource>
 </RCC>
