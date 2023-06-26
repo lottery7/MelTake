@@ -64,10 +64,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     m_visualizer = new audio_app::audio_visualizer();
     m_visualizer->set_player(m_player);
     m_visualizer->show();
-    m_visualizer->set_fragment_shader_path("C:/Users/HUAWEI/Documents/project/"
-                                           "build-qmake_project-Desktop_Qt_5_15_2_MinGW_64_bit-Debug/shaders/"
-                                           "main.frag");
-
 
     m_database = QSqlDatabase::addDatabase("QSQLITE");
     m_database.setDatabaseName("./MusicDatabase.db");
