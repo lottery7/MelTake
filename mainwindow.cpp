@@ -21,7 +21,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "include/audio_visualizer.hpp"
-#include "src/delegate.cpp"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
@@ -56,10 +55,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     m_player->setNotifyInterval(25);
     ui->track_time_lable->setText("00:00 / 00:00");
 
+    display_nodata_information();
+
     m_visualizer = new audio_app::audio_visualizer();
     m_visualizer->set_player(m_player);
     m_visualizer->show();
-    m_visualizer->set_fragment_shader_path("C:/Users/kseni/Desktop/pro/audio_app-qt-visualization/shaders/main.frag");
+    m_visualizer->set_fragment_shader_path("C:/Users/kseni/Desktop/lel/audio_app-qt-visualization/shaders/main.frag");
 
     m_database = QSqlDatabase::addDatabase("QSQLITE");
     m_database.setDatabaseName("./MusicDatabase.db");
@@ -113,10 +114,10 @@ connect(m_player, &QMediaPlayer::positionChanged, ui->track_time_lable, [this]()
 
 MainWindow::~MainWindow()
 {
-delete ui;
-delete m_current_playlist_model;
-delete m_current_playlist;
-delete m_player;
+    delete ui;
+    delete m_current_playlist_model;
+    delete m_current_playlist;
+    delete m_player;
 }
 
 
@@ -427,4 +428,3 @@ void MainWindow::expand_window_fullscreen(){
 void MainWindow::toggle(){
     toggle_window(this);
 }
-
