@@ -5,23 +5,22 @@
 
 namespace audio_app {
 
-const int SAMPLE_SIZE = 16;
-extern const int FFT_SIZE = 4096;
-const int DELAY = 4'096;
-
 audio_decoder::audio_decoder(QObject *parent)
     : QObject(parent),
-      m_prev_buffer_start_time(),
-      m_fft_input(fftw_alloc_real(FFT_SIZE)),
-      m_fft_output(fftw_alloc_complex(FFT_SIZE / 2 + 1)),
+      m_prev_buffer_start_time(INT64_MAX),
+      m_buffering_start_time_mcs(),
+      m_fft_size(16'384),
+      m_fft_window_size(4096),
+      m_fft_input(fftw_alloc_real(m_fft_size)),
+      m_fft_output(fftw_alloc_complex(m_fft_size / 2 + 1)),
       m_fft_plan(fftw_plan_dft_r2c_1d(
-          FFT_SIZE,
+          m_fft_size,
           m_fft_input,
           m_fft_output,
           FFTW_MEASURE
       )),
-      m_window_values(FFT_SIZE, -1),
-      m_magnitudes(FFT_SIZE / 2 + 1),
+      m_window_values(m_fft_size, -1),
+      m_magnitudes(m_fft_size / 2 + 1),
       m_first_sample_index() {
 }
 
@@ -47,6 +46,10 @@ bool audio_decoder::set_player(QMediaPlayer *player) {
     return true;
 }
 
+qint32 audio_decoder::get_fft_size() const {
+    return m_fft_size;
+}
+
 void audio_decoder::update_magnitudes() {
     process_fft();
     for (int i = 0; i < m_magnitudes.size(); ++i) {
@@ -69,36 +72,56 @@ void audio_decoder::process_buffer(const QAudioBuffer &buffer) {
     if (buffer.startTime() < m_prev_buffer_start_time) {
         // Audio file has changed (another audio or replay)
         reset_samples_buffer();
+        m_buffering_start_time_mcs = buffer.startTime();
     }
-
     m_prev_buffer_start_time = buffer.startTime();
-    const SAMPLE_TYPE *raw_data =
-        reinterpret_cast<const SAMPLE_TYPE *>(buffer.constData());
-
-    Q_ASSERT(SAMPLE_SIZE == buffer.format().sampleSize());
 
     for (int i = 0; i < buffer.sampleCount();
          i += buffer.format().channelCount()) {
         // Get sample from only one channel
         // If you get maximum from all channels, then you will have harmonic
         // distortion
-        m_samples_buffer.push_back(raw_data[i]);
+
+        double sample = 0;
+
+        switch (buffer.format().sampleType()) {
+            case QAudioFormat::SampleType::Float: {
+                sample = reinterpret_cast<const float *>(buffer.constData())[i];
+            } break;
+
+            case QAudioFormat::SampleType::UnSignedInt: {
+                sample =
+                    reinterpret_cast<const quint16 *>(buffer.constData())[i];
+            } break;
+
+            case QAudioFormat::SampleType::SignedInt: {
+                sample =
+                    reinterpret_cast<const qint16 *>(buffer.constData())[i];
+            } break;
+
+            case QAudioFormat::SampleType::Unknown: {
+                qDebug() << "audio_decoder: Audio format is not supported";
+                return;
+            } break;
+        }
+
+        m_samples_buffer.push_back(sample);
     }
 }
 
 void audio_decoder::process_fft() {
-    qint64 audio_pos = get_audio_position() + DELAY;
+    qint64 buffer_start = get_audio_position() - m_first_sample_index;
 
-    if (audio_pos >= m_samples_buffer.size() + m_first_sample_index) {
+    if (buffer_start >= m_samples_buffer.size()) {
         qDebug() << "Audio is too fast: delay is "
-                 << audio_pos - m_samples_buffer.size() - m_first_sample_index;
+                 << buffer_start - m_samples_buffer.size() + 1;
     }
 
-    for (int i = 0; i < FFT_SIZE; ++i) {
-        qint64 buffer_index =
-            audio_pos - FFT_SIZE + i + 1 - m_first_sample_index;
+    for (int i = 0; i < m_fft_size; i++) {
+        qint64 buffer_index = buffer_start + i;
 
-        if (buffer_index >= 0 && buffer_index < m_samples_buffer.size()) {
+        if (i < m_fft_window_size && buffer_index >= 0 &&
+            buffer_index < m_samples_buffer.size()) {
             double window = get_cached_window_value(i);
             m_fft_input[i] = m_samples_buffer[buffer_index] * window;
         } else {
@@ -109,26 +132,22 @@ void audio_decoder::process_fft() {
     fftw_execute(m_fft_plan);
 
     // Cut buffer to prevent high memory usage
-    qint64 first_sample_index = audio_pos - FFT_SIZE + 1;
-
-    if (first_sample_index > m_first_sample_index + 10'000) {
-        m_samples_buffer = QVector<SAMPLE_TYPE>(
-            m_samples_buffer.begin() + first_sample_index -
-                m_first_sample_index,
-            m_samples_buffer.end()
+    if (buffer_start > 10'000) {
+        m_samples_buffer = QVector<double>(
+            m_samples_buffer.begin() + buffer_start, m_samples_buffer.end()
         );
-        m_first_sample_index = first_sample_index;
+        m_first_sample_index += buffer_start;
     }
 }
 
 double audio_decoder::get_cached_window_value(int n) {
-    Q_ASSERT(0 <= n && n < FFT_SIZE);
+    Q_ASSERT(0 <= n && n < m_fft_size);
 
     if (m_window_values[n] != -1) {
         return m_window_values[n];
     }
 
-    double N = FFT_SIZE - 1;
+    double N = m_fft_window_size - 1;
     return m_window_values[n] = 0.54 - 0.46 * qCos(2 * M_PI * n / N);
 }
 
@@ -143,7 +162,8 @@ qint64 audio_decoder::get_audio_position() const {
     }
 
     return qFloor(
-        m_player->position() * m_current_audio_format.sampleRate() / 1'000.0
+        (m_player->position() - m_buffering_start_time_mcs) *
+        m_current_audio_format.sampleRate() / 1'000.0
     );
 }
 
