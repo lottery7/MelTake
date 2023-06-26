@@ -23,6 +23,7 @@
 	qmake
 	make
 	```
+# Вид приложения
 
  ![image](https://github.com/B-E-D-A/audio-app-MelTake/assets/112130616/49c3dd5d-c366-402b-9c7c-544f5561094d) 
  ![image](https://github.com/B-E-D-A/audio-app-MelTake/assets/112130616/d827d023-f691-4508-8539-83600a85d687) 
