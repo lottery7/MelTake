@@ -1,12 +1,12 @@
-#include "mainwindow.h"
-#include "include/fwd.hpp"
-
 #include <QApplication>
+
+#include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+    QApplication app(argc, argv);
+    app.setApplicationName("MelTake");
     MainWindow window;
     window.show();
-    return a.exec();
+    return app.exec();
 }
