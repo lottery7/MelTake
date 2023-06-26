@@ -39,7 +39,3 @@ INCLUDEPATH += $${TAGLIB_INCLUDE_PATH}
 # Link FFTW3
 LIBS += -L$${FFTW_LIB_PATH} -lfftw3-3  # using the "Direct linking", mingw feature
 INCLUDEPATH += $${FFTW_INCLUDE_PATH}
-
-# Link FFTW3
-INCLUDEPATH += D:/QT/Libs/fftw/
-LIBS += -LD:/QT/Libs/fftw/ -lfftw3-3
