@@ -17,6 +17,8 @@ public:
     void update_spectrum();
 
     audio_decoder &get_decoder();
+
+    qint64 get_spectrum_size() const;
     const QVector<double> &get_spectrum() const;
 
     double get_max_magnitude() const;
@@ -24,6 +26,9 @@ public:
 private:
     double get_freq_from_fft_index(qint64 index) const;
 
+    double m_min_frequency;
+    double m_max_frequency;
+    qint64 m_spectrum_size;
     audio_decoder m_decoder;
     double m_max_magnitude;
     QVector<double> m_frequency_bins;
