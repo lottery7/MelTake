@@ -30,18 +30,18 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     m_current_playlist_model = new QStandardItemModel(this);
     m_current_playlist_model->setHorizontalHeaderLabels(QStringList()<<tr("track_name")<<tr("path")<<tr("time")<<tr("action"));
-    ui->tracks_tabel_view->setModel(m_current_playlist_model);
-    ui->tracks_tabel_view->hideColumn(1);
-    ui->tracks_tabel_view->horizontalHeader()->setVisible(false);
-    ui->tracks_tabel_view->verticalHeader()->setVisible(false);
-    ui->tracks_tabel_view->setSelectionBehavior(QAbstractItemView::SelectRows);
-    ui->tracks_tabel_view->setSelectionMode(QAbstractItemView::SingleSelection);
-    ui->tracks_tabel_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->tracks_tabel_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    ui->tracks_tabel_view->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
-    ui->tracks_tabel_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    ui->tracks_tabel_view->setColumnWidth(1, 50);
-    ui->tracks_tabel_view->setColumnWidth(2, 50);
+    ui->tracks_table_view->setModel(m_current_playlist_model);
+    ui->tracks_table_view->hideColumn(1);
+    ui->tracks_table_view->horizontalHeader()->setVisible(false);
+    ui->tracks_table_view->verticalHeader()->setVisible(false);
+    ui->tracks_table_view->setSelectionBehavior(QAbstractItemView::SelectRows);
+    ui->tracks_table_view->setSelectionMode(QAbstractItemView::SingleSelection);
+    ui->tracks_table_view->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tracks_table_view->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+    ui->tracks_table_view->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
+    ui->tracks_table_view->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
+    ui->tracks_table_view->setColumnWidth(1, 50);
+    ui->tracks_table_view->setColumnWidth(2, 50);
 
     setWindowTitle("MelTake");
 
@@ -89,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                 m_current_playlist->setCurrentIndex(0);
             }
 
-connect(ui->tracks_tabel_view, &QTableView::doubleClicked, m_current_playlist, [this](const QModelIndex &index){
+connect(ui->tracks_table_view, &QTableView::doubleClicked, m_current_playlist, [this](const QModelIndex &index){
    m_current_playlist->setCurrentIndex(index.row());
 });
 
@@ -101,8 +101,15 @@ connect(m_current_playlist, &QMediaPlaylist::currentIndexChanged, ui->album_cove
 });
 
 
+// пропиши это
+//connect(m_playlists, &QMediaPlaylist::currentIndexChanged, ui->add_playlist_button, [this](int index){
+//    ui->add_playlist_button->setText(получение названия);
+//});
+
 connect(m_player, &QMediaPlayer::durationChanged, ui->process_slyder, &QSlider::setMaximum);
+
 connect(m_player, &QMediaPlayer::positionChanged, ui->process_slyder, &QSlider::setValue);
+
 connect(ui->process_slyder, &QSlider::sliderMoved, m_player, &QMediaPlayer::setPosition);
 
 connect(m_player, &QMediaPlayer::positionChanged, ui->track_time_lable, [this](){
@@ -146,11 +153,11 @@ void MainWindow::add_track_to_playlist(QFile &track, const QString &track_path){
 //        button->setStyleSheet("QPushButton { background-color: none; border-image: url(:/resources/buttons/dots_horizontal.png); }");
 
         connect(button, &QPushButton::clicked, [&] () {
-            int index = ui->tracks_tabel_view->currentIndex().row();
+            int index = ui->tracks_table_view->currentIndex().row();
             qDebug()<<"want ot delete row - "<<index;
             delete_track(index);
         });
-        ui->tracks_tabel_view->setIndexWidget(m_current_playlist_model->index(i,3), button);
+        ui->tracks_table_view->setIndexWidget(m_current_playlist_model->index(i,3), button);
         m_current_playlist->addMedia(QUrl(track_path));
     }
 }
@@ -428,3 +435,4 @@ void MainWindow::expand_window_fullscreen(){
 void MainWindow::toggle(){
     toggle_window(this);
 }
+
