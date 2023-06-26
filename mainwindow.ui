@@ -75,28 +75,6 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
-         <widget class="QPushButton" name="settings_button">
-          <property name="styleSheet">
-           <string notr="true">QPushButton{
-	color: rgb(45,75,55);
-	background-color: rgba(238,193,117,220);
-selection-color: rgb(45,75,55);
-	selection-border: 0px;
-	selection-background-color: rgba(179,219,192,220);
-	border: 1px solid rgba(215,125,40,200);
-	border-radius: 3px;
-	font-weight: bold;
-    font-size: 25px;
-	padding: 2px 4px;
-}
-</string>
-          </property>
-          <property name="text">
-           <string>Settings</string>
-          </property>
-         </widget>
-        </item>
-        <item>
          <widget class="QPushButton" name="load_tracks_button">
           <property name="styleSheet">
            <string notr="true">QPushButton{
@@ -151,6 +129,12 @@ selection-color: rgb(45,75,55);
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">QLabel {
+    border: 4px solid rgb(45,75,55);
+	bourder-radious: 5px;
+}</string>
           </property>
           <property name="text">
            <string>Standart_app_cover</string>
@@ -236,16 +220,33 @@ selection-color: rgb(45,75,55);
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>45</height>
+                 </size>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QPushButton {
-border-image: url(:/resources/buttons/previous.png);
-background: none;
-width: 30px;
-height: 30px;
-}</string>
+                 <string notr="true"> QPushButton {
+	border-image: url(:/resources/buttons/previous.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+	margin-right: 5px;
+ }
+ QPushButton:pressed {
+	border-image: url(:/resources/buttons/previous_clicked.png);
+	border-opacity: 0.8;
+ }
+ QPushButton:hover {
+	border-image: url(:/resources/buttons/previous_clicked.png);
+ }</string>
                 </property>
                 <property name="text">
                  <string/>
+                </property>
+                <property name="icon">
+                 <iconset theme="go-previous"/>
                 </property>
                </widget>
               </item>
@@ -276,6 +277,12 @@ height: 30px;
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>50</height>
+                 </size>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
 border-image: url(:/resources/buttons/play.png);
@@ -283,12 +290,18 @@ background: none;
 width: 40px;
 height: 40px;
 }
-
+QPushButton:hover:!checked
+{
+  border-image: url(:/resources/buttons/play_clicked.png);
+}
 QPushButton:checked
 {
    border-image: url(:/resources/buttons/pause.png);
 }
-
+QPushButton:hover:checked
+{
+  border-image: url(:/resources/buttons/pause_clicked.png);
+}
 </string>
                 </property>
                 <property name="text">
@@ -310,13 +323,27 @@ QPushButton:checked
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>45</width>
+                  <height>45</height>
+                 </size>
+                </property>
                 <property name="styleSheet">
-                 <string notr="true">QPushButton {
-border-image: url(:/resources/buttons/next.png);
-background: none;
-width: 30px;
-height: 30px;
-}</string>
+                 <string notr="true"> QPushButton {
+	border-image: url(:/resources/buttons/next.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+ }
+ QPushButton:pressed {
+	border-image: url(:/resources/buttons/next_clicked.png);
+	opacity: 0.8;
+ }
+ QPushButton:hover {
+	border-image: url(:/resources/buttons/next_clicked.png);
+ }
+</string>
                 </property>
                 <property name="text">
                  <string/>
@@ -330,30 +357,6 @@ height: 30px;
               <property name="sizeConstraint">
                <enum>QLayout::SetDefaultConstraint</enum>
               </property>
-              <item row="1" column="0">
-               <widget class="QPushButton" name="track_loop_mode_button">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="styleSheet">
-                 <string notr="true">QPushButton {
-border-image: url(:/resources/buttons/loop.png);
-background: none;
-width: 30px;
-height: 30px;
-}</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="checkable">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
               <item row="2" column="1">
                <widget class="QSlider" name="volume_slider">
                 <property name="sizePolicy">
@@ -394,6 +397,73 @@ QSlider::sub-page:horizontal {
                 </property>
                </widget>
               </item>
+              <item row="2" column="0">
+               <widget class="QPushButton" name="mute_button">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>40</width>
+                  <height>40</height>
+                 </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">QPushButton {
+	border-image: url(:/resources/buttons/volume_on.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+}
+
+QPushButton:hover:!checked {
+	border-image: url(:/resources/buttons/volume_on_clicked.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+}
+
+QPushButton:pressed:!checked {
+	border-image: url(:/resources/buttons/volume_on_clicked.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+}
+
+QPushButton:checked
+{
+   border-image: url(:/resources/buttons/volume_off.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+}
+
+QPushButton:hover:checked {
+	border-image: url(:/resources/buttons/volume_off_clicked.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+}
+
+QPushButton:pressed:checked {
+	border-image: url(:/resources/buttons/volume_off_clicked.png);
+	background: none;
+	width: 30px;
+	height: 30px;
+}
+</string>
+                </property>
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="checkable">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
               <item row="0" column="0">
                <widget class="QPushButton" name="random_mode_button">
                 <property name="sizePolicy">
@@ -402,12 +472,40 @@ QSlider::sub-page:horizontal {
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>50</height>
+                 </size>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-border-image: url(:/resources/buttons/random.png);
-background: none;
-width: 30px;
-height: 30px;
+	border-image: url(:/resources/buttons/random.png);
+	background: none;
+	width: 40px;
+	height: 40px;
+}
+
+ QPushButton:hover {
+	border-image: url(:/resources/buttons/random_clicked.png);
+	background: none;
+	opacity: 100;
+	width: 40px;
+	height: 40px;
+ }
+
+QPushButton:pressed {
+	border-image: url(:/resources/buttons/random_clicked.png);
+	background: none;
+	width: 40px;
+	height: 40px;
+}
+
+QPushButton:checked {
+	border-image: url(:/resources/buttons/random_clicked.png);
+	background: none;
+	width: 40px;
+	height: 40px;
 }</string>
                 </property>
                 <property name="text">
@@ -418,24 +516,48 @@ height: 30px;
                 </property>
                </widget>
               </item>
-              <item row="2" column="0">
-               <widget class="QPushButton" name="mute_button">
+              <item row="1" column="0">
+               <widget class="QPushButton" name="track_loop_mode_button">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>50</width>
+                  <height>50</height>
+                 </size>
+                </property>
                 <property name="styleSheet">
                  <string notr="true">QPushButton {
-	border-image: url(:/resources/buttons/volume_on.png);
+	border-image: url(:/resources/buttons/loop.png);
 	background: none;
-
+	width: 40px;
+	height: 40px;
 }
 
-QPushButton:checked
-{
-   border-image: url(:/resources/buttons/volume_off.png);
+ QPushButton:hover {
+	border-image: url(:/resources/buttons/loop_clicked.png);
+	background: none;
+	opacity: 100;
+	width: 40px;
+	height: 40px;
+ }
+
+QPushButton:pressed {
+	border-image: url(:/resources/buttons/loop_clicked.png);
+	background: none;
+	width: 40px;
+	height: 40px;
+}
+
+QPushButton:checked {
+	border-image: url(:/resources/buttons/loop_clicked.png);
+	background: none;
+	width: 40px;
+	height: 40px;
 }</string>
                 </property>
                 <property name="text">
@@ -625,7 +747,7 @@ QSlider::sub-page:horizontal {
        </layout>
       </item>
       <item>
-       <widget class="QTableView" name="tracks_tabel_view">
+       <widget class="QTableView" name="tracks_table_view">
         <property name="tabletTracking">
          <bool>false</bool>
         </property>
@@ -713,7 +835,7 @@ QSlider::sub-page:horizontal {
          <enum>QLayout::SetMaximumSize</enum>
         </property>
         <item>
-         <widget class="QPushButton" name="add_playlist">
+         <widget class="QPushButton" name="add_playlist_button">
           <property name="styleSheet">
            <string notr="true">QPushButton{
 	color: rgb(45,75,55);
