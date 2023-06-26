@@ -21,7 +21,6 @@
 
 // WIP:
 // * Add colors from the cover
-// * Prevent crashing on real-time shader coding
 // * Add settings panel
 
 namespace audio_app {
@@ -38,13 +37,9 @@ audio_visualizer::audio_visualizer(QWidget *parent)
       m_fps_counter(),
       m_nsecs_between_frames(),
       m_time_sum(),
-      m_fragment_shader(),
-      m_watcher(this) {
+      m_fragment_shader_path(":/shaders/main.frag"),
+      m_fragment_shader() {
     setWindowTitle("Visualizer");
-    connect(
-        &m_watcher, SIGNAL(fileChanged(QString)), this,
-        SLOT(compile_fragment_shader())
-    );
     m_fps_timer.start();
     m_time.start();
 }
@@ -57,15 +52,6 @@ audio_visualizer::~audio_visualizer() {
 void audio_visualizer::set_player(QMediaPlayer *player) {
     m_player = player;
     m_spectrum_analyzer.get_decoder().set_player(player);
-}
-
-void audio_visualizer::set_fragment_shader_path(const QString &path) {
-    if (m_watcher.files().contains(m_fragment_shader_path)) {
-        m_watcher.removePath(m_fragment_shader_path);
-    }
-    m_fragment_shader_path = path;
-    m_watcher.addPath(m_fragment_shader_path);
-    compile_fragment_shader();
 }
 
 void audio_visualizer::initializeGL() {

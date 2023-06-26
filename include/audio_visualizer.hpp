@@ -27,7 +27,6 @@ public:
     ~audio_visualizer();
 
     void set_player(QMediaPlayer *player);
-    void set_fragment_shader_path(const QString &path);
 
 public slots:
     void clear_buffer();

@@ -51,7 +51,6 @@ MainWindow::MainWindow(QWidget *parent)
     m_visualizer = new audio_app::audio_visualizer();
     m_visualizer->set_player(m_player);
     m_visualizer->show();
-    m_visualizer->set_fragment_shader_path("path/to/main.frag");
 
     // установка дефолтной обложки
     QPixmap pixmap(":/resources/cover.png");

@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>resources/cover.png</file>
+        <file>shaders/main.frag</file>
     </qresource>
 </RCC>

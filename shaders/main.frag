@@ -84,8 +84,6 @@ void context_add_color(vec3 color, float mask) {
     context.color.a = 1.;
 #else
     if (context.color.a < mask) {
-        // context.color.rgb += color * mask;
-        // context.color.a = mask;
         context.color = vec4(color, mask);
     }
 #endif
@@ -168,7 +166,6 @@ void draw_bar(vec2 st, float w, float h, vec3 color) {
     BLUR = get_scaled_blur();
 
     float s1 = smoothstep(p.x - BLUR, p.x + BLUR, uv.x);
-    // float s2 = smoothstep(p.x + w + fade, p.x + w - fade, uv.x);
     float s2 = smoothstep(p.x + w + BLUR, p.x + w - BLUR, uv.x);
     float s3 = smoothstep(p.y - BLUR, p.y + BLUR, uv.y);
     float s4 = smoothstep(p.y + h + BLUR, p.y + h - BLUR, uv.y);
@@ -197,12 +194,6 @@ void draw_bars(float radius, float offset) {
 // MAIN
 
 void render() {
-    // float eps = .0007;
-    // if (abs(context.uv.x) < eps || abs(context.uv.y) < eps) {
-    //     context.color = vec4(1, 0, 0, 1);
-    //     return;
-    // }
-
     float bars_radius = .14;
     draw_bars(bars_radius, PI / 2. * (1. + 1. / u_spectrum_size));
 
@@ -213,16 +204,6 @@ void render() {
     float progress_radius = circle_radius - circle_width;
     float progress_width = .004;
     draw_progress_bar(progress_radius, progress_width);
-    
-    // sparkle
-    // vec2 sparkle_pos = vec2(.0, -1.);
-    // vec4 sparkle_color = vis_sparkle(uv, sparkle_pos, .2* scale_magnitude(u_max_magnitude));
-    // if (sparkle_color.a > color.a) color = sparkle_color;
-
-    // vec3 bg_color = mix(vec3(0), sparkle_color.rgb, sparkle_color.a);
-    // vec3 bg_color = vec3(0);
-    // color.rgb = mix(bg_color, color.rgb, color.a);
-    // return color.rgb;
 }
 
 void construct_context() {
