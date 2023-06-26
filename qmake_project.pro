@@ -31,6 +31,8 @@ FORMS += \
 
 RESOURCES += \
     resources.qrc
+    
+win32: RC_ICONS += resources/ghost_icon.ico
 
 # Link taglib
 LIBS += -L$${TAGLIB_LIB_PATH} -ltag
