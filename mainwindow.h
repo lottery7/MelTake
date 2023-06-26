@@ -60,13 +60,26 @@ private slots:
 
     QString get_str_time_from_seconds(int seconds);
 
-    void add_track_to_playlist(QFile& track, const QString &track_path);
+    void add_track_to_playlist(QFile& track, const QString &track_path, QMediaPlaylist *playlist, bool is_from_database);
 
     void delete_track(int index);
 
+    void add_playlist_to_table(QMediaPlaylist *playlist);
 
-    // here place to add
+    void on_playlists_table_clicked(const QModelIndex &index);
 
+    int return_playlist_index_if_exists(const QString &playlist_name);
+
+    void add_track_from_the_playlist_to_database(
+            const QString &track_path,
+            const QString &playlist_name
+    );
+
+    void set_current_playlist_view();
+
+    void create_playlist();
+
+    void create_playlist_with_given_name(const QString & playlist_name, bool is_from_database);
 
     void set_shortcuts();
 
@@ -95,9 +108,9 @@ private:
 
     QStandardItemModel *m_current_playlist_model;
 
-//    QVector<QMediaPlaylist *> m_playlists;
+    QVector<QMediaPlaylist *> m_playlists;
 
-//    QStandardItemModel *m_playlists_model;
+    QStandardItemModel *m_playlists_model;
 
     audio_app::audio_visualizer *m_visualizer;
 
