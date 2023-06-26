@@ -1,5 +1,10 @@
 TARGET = audio_app
 
+TAGLIB_LIB_PATH = ""
+TAGLIB_INCLUDE_PATH = ""
+FFTW_LIB_PATH = ""
+FFTW_INCLUDE_PATH = ""
+
 QT       += core gui sql
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets multimedia
@@ -27,12 +32,13 @@ FORMS += \
 RESOURCES += \
     resources.qrc
 
-win32: RC_ICONS += resources/ghost_icon.ico
-
 # Link taglib
-win32: LIBS += -LD:/QT/Libs/taglib/finish/lib/ -llibtag.dll
-INCLUDEPATH += D:/QT/Libs/taglib/finish/include
-DEPENDPATH += D:/QT/Libs/taglib/finish/include
+LIBS += -L$${TAGLIB_LIB_PATH} -ltag
+INCLUDEPATH += $${TAGLIB_INCLUDE_PATH}
+
+# Link FFTW3
+LIBS += -L$${FFTW_LIB_PATH} -lfftw3-3  # using the "Direct linking", mingw feature
+INCLUDEPATH += $${FFTW_INCLUDE_PATH}
 
 # Link FFTW3
 INCLUDEPATH += D:/QT/Libs/fftw/
