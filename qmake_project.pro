@@ -1,5 +1,10 @@
 TARGET = audio_app
 
+TAGLIB_LIB_PATH = ""
+TAGLIB_INCLUDE_PATH = ""
+FFTW_LIB_PATH = ""
+FFTW_INCLUDE_PATH = ""
+
 QT       += core gui
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets multimedia
@@ -33,9 +38,10 @@ FORMS += \
 RESOURCES += \
     resources.qrc
 
-LIBS += -LPATH/TO/TAGLIB/LIB -ltag
-INCLUDEPATH += PATH/TO/TAGLIB/HEADERS
+# Link taglib
+LIBS += -L$${TAGLIB_LIB_PATH} -ltag
+INCLUDEPATH += $${TAGLIB_INCLUDE_PATH}
 
 # Link FFTW3
-LIBS += -LPATH/TO/FFTW/LIB -lfftw3-3  # using the "Direct linking", mingw feature
-INCLUDEPATH += PATH/TO/FFTW/HEADERS
+LIBS += -L$${FFTW_LIB_PATH} -lfftw3-3  # using the "Direct linking", mingw feature
+INCLUDEPATH += $${FFTW_INCLUDE_PATH}

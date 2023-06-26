@@ -10,16 +10,17 @@
 
 namespace audio_app {
 
-typedef qint16 SAMPLE_TYPE;
-
 class audio_decoder : public QObject {
     Q_OBJECT
 
 public:
     explicit audio_decoder(QObject *parent = nullptr);
+    // explicit audio_decoder(QObject *parent = nullptr);
     ~audio_decoder();
 
     bool set_player(QMediaPlayer *player);
+
+    qint32 get_fft_size() const;
 
     void update_magnitudes();
     QVector<double> get_magnitudes() const;
@@ -41,14 +42,17 @@ private:
     const QMediaPlayer *m_player;
     QAudioFormat m_current_audio_format;
     qint64 m_prev_buffer_start_time;
+    qint64 m_buffering_start_time_mcs;
 
+    qint32 m_fft_size;
+    qint32 m_fft_window_size;
     double *m_fft_input;
     fftw_complex *m_fft_output;
     fftw_plan m_fft_plan;
 
     QVector<double> m_window_values;
     QVector<double> m_magnitudes;
-    QVector<SAMPLE_TYPE> m_samples_buffer;
+    QVector<double> m_samples_buffer;
     qint64 m_first_sample_index;
 };
 
