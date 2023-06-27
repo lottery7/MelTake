@@ -133,9 +133,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         }
     });
 
-    connect(ui->playlists_table_view, &QTableView::clicked, ui->current_playlist_lable, [this](const QModelIndex &index){
+    connect(ui->playlists_table_view, &QTableView::clicked, ui->current_playlist_label, [this](const QModelIndex &index){
             QString str = m_playlists_model->data(m_playlists_model->index(index.row(), 0)).toString();
-            ui->current_playlist_lable->setText("● "+str+" ●");
+            ui->current_playlist_label->setText("● "+str+" ●");
         });
 
     connect(m_player, &QMediaPlayer::durationChanged, ui->process_slyder, &QSlider::setMaximum);
@@ -385,6 +385,7 @@ void MainWindow::on_next_track_button_clicked()
     }
     else{
         m_current_playlist->next();
+        qDebug("it should go next");
     }
 }
 
@@ -542,7 +543,7 @@ void MainWindow::display_nodata_information (){
 
 QString MainWindow::get_str_time_from_seconds(int seconds){
     QString str;
-    seconds+=3;
+    seconds+=6;
     int hours = seconds / 3600;
     seconds %= 3600;
     int minutes = seconds / 60;
