@@ -48,6 +48,8 @@ private slots:
 
     void on_mute_button_clicked();
 
+    void on_playlists_table_clicked(const QModelIndex &index);
+
     void on_volume_slider_valueChanged(int value);
 
     void on_random_mode_button_clicked();
@@ -60,22 +62,22 @@ private slots:
 
     QString get_str_time_from_seconds(int seconds);
 
+    void form_track_item(const QString &track_path, QList<QStandardItem *> &items);
+
     void add_track_to_playlist(QFile& track, const QString &track_path, QMediaPlaylist *playlist, bool is_from_database);
 
     void delete_track(int index);
 
+    void delete_track_from_database(const QString &track_path, QString playlist_name);
+
     void add_playlist_to_table(QMediaPlaylist *playlist);
 
-    void on_playlists_table_clicked(const QModelIndex &index);
-
-    int return_playlist_index_if_exists(const QString &playlist_name);
-
-    void add_track_from_the_playlist_to_database(
+    void add_track_and_playlist_to_database(
             const QString &track_path,
             const QString &playlist_name
     );
 
-    void set_current_playlist_view();
+    void create_delete_button(int i);
 
     void create_playlist();
 
@@ -96,6 +98,10 @@ private slots:
     void make_fullscreen(QMainWindow* mainWindow);
 
     void expand_window_fullscreen();
+
+    int return_playlist_index_if_exists(const QString &playlist_name);
+
+    void set_current_playlist_view();
 
 
 private:
