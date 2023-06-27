@@ -27,12 +27,12 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 {
     ui->setupUi(this);
 
+    setWindowTitle("MelTake");
+
     set_shortcuts();
 
     m_current_playlist_model = new QStandardItemModel(this);
     set_current_playlist_view();
-
-    setWindowTitle("MelTake");
 
     m_playlists_model = new QStandardItemModel(this);
     m_playlists_model->setHorizontalHeaderLabels(QStringList()<<tr("playlists"));
@@ -56,14 +56,14 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     m_current_playlist->setObjectName("All tracks");
     m_playlists.append(m_current_playlist);
-    QStandardItem *item = new QStandardItem(m_current_playlist->objectName());
-    m_playlists_model->appendRow(item);
+    add_playlist_to_table(m_current_playlist);
 
     display_nodata_information();
 
     m_visualizer = new audio_app::audio_visualizer();
     m_visualizer->set_player(m_player);
     m_visualizer->show();
+
 
     m_database = QSqlDatabase::addDatabase("QSQLITE");
     m_database.setDatabaseName("./MusicDatabase.db");
@@ -110,13 +110,11 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
                 );
             }
         } else if (!playlist_name.isEmpty()) {
-            qDebug()<<playlist_name;
             int index = return_playlist_index_if_exists(playlist_name);
             if (index == -1) {
                 create_playlist_with_given_name(playlist_name, true);
             }
         }
-
     }
 
     if (!m_current_playlist->isEmpty()){
@@ -135,11 +133,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         }
     });
 
-
-
-//connect(m_playlists, &QMediaPlaylist::currentIndexChanged, ui->add_playlist_button, [this](int index){
-//   ui->add_playlist_button->setText(получение названия);
-//});
+    connect(ui->playlists_table_view, &QTableView::clicked, ui->current_playlist_lable, [this](const QModelIndex &index){
+            QString str = m_playlists_model->data(m_playlists_model->index(index.row(), 0)).toString();
+            ui->current_playlist_lable->setText("● "+str+" ●");
+        });
 
     connect(m_player, &QMediaPlayer::durationChanged, ui->process_slyder, &QSlider::setMaximum);
 
@@ -173,9 +170,7 @@ MainWindow::~MainWindow()
 }
 
 
-void MainWindow::set_current_playlist_view(
-
-) {
+void MainWindow::set_current_playlist_view() {
     m_current_playlist_model->setHorizontalHeaderLabels(QStringList()<<tr("track_name")<<tr("path")<<tr("time")<<tr("action"));
     ui->tracks_table_view->setModel(m_current_playlist_model);
     ui->tracks_table_view->hideColumn(1);
@@ -230,50 +225,54 @@ void MainWindow::create_playlist_with_given_name(
     m_playlists.append(new_playlist);
     add_playlist_to_table(new_playlist);
     if (!is_from_database) {
-        add_track_from_the_playlist_to_database("", new_playlist->objectName());
+        add_track_and_playlist_to_database("", new_playlist->objectName());
     }
 }
 
+void MainWindow::create_delete_button(int i){
+    QPushButton* button = new QPushButton();
+    button->setFixedSize(50, 50);
+    button->setIcon(QIcon(":/resources/buttons/cross.png"));
+    button->setStyleSheet("background-color: rgba(255, 255, 255, 0); padding-top: 10px;");
+
+    connect(button, &QPushButton::clicked, [&] () {
+        int index = ui->tracks_table_view->currentIndex().row();
+        QString path = ui->tracks_table_view->model()->data(ui->tracks_table_view->currentIndex(), Qt::UserRole).toString();
+        delete_track(index);
+        delete_track_from_database(path, m_player->playlist()->objectName());
+
+    });
+    ui->tracks_table_view->setIndexWidget(m_current_playlist_model->index(i,3), button);
+
+}
+
+void MainWindow::form_track_item(const QString &track_path, QList<QStandardItem *> &items){
+    TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
+    std::string track_name (mpeg_track.tag()->title().toCString(true));
+    auto artist = mpeg_track.tag()->artist().toCString(true);
+    track_name+=" - "+std::string(artist);
+    track_name=' '+track_name;
+    current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds());
+    items.append(new QStandardItem(track_name.c_str()));
+    items.append(new QStandardItem(track_path));
+    items.append(new QStandardItem(current_track_duracrion));
+    items.append(new QStandardItem());
+}
 
 
 void MainWindow::add_track_to_playlist(QFile &track, const QString &track_path, QMediaPlaylist* playlist, bool is_from_database){
     if(track.exists()){
         QList<QStandardItem *> items;
-        TagLib::MPEG::File mpeg_track (track_path.toStdString().c_str());
-        std::string track_name (mpeg_track.tag()->title().toCString(true));
-        auto artist = mpeg_track.tag()->artist().toCString(true);
-        track_name+=" - "+std::string(artist);
-        track_name=' '+track_name;
-        current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds());
-        items.append(new QStandardItem(track_name.c_str()));
-        items.append(new QStandardItem(track_path));
-        items.append(new QStandardItem(current_track_duracrion));
-        items.append(new QStandardItem());
+        form_track_item(track_path, items);
         if(!is_from_database){
             m_current_playlist_model->appendRow(items);
         }
-
-        int i = playlist->mediaCount();
-        QPushButton* button = new QPushButton();
-        button->setFixedSize(50, 50);
-        button->setIcon(QIcon(":/resources/buttons/dots_vertical.png"));
-        button->setIconSize(QSize(28, 28));
-
-//        button->setStyleSheet("QPushButton { background-color: none; border-image: url(:/resources/buttons/dots_horizontal.png); }");
-
-        connect(button, &QPushButton::clicked, [&] () {
-            int index = ui->tracks_table_view->currentIndex().row();
-            qDebug()<<"want ot delete row - "<<index;
-            delete_track(index);
-        });
-        ui->tracks_table_view->setIndexWidget(m_current_playlist_model->index(i,3), button);
+        create_delete_button(playlist->mediaCount());
         playlist->addMedia(QUrl(track_path));
     }
 }
 
-
-
-void MainWindow::add_track_from_the_playlist_to_database(
+void MainWindow::add_track_and_playlist_to_database(
         const QString &track_path,
         const QString &playlist_name
 ) {
@@ -291,14 +290,11 @@ void MainWindow::add_track_from_the_playlist_to_database(
 
 void MainWindow::on_load_tracks_button_clicked()
 {
-//    ui->statusbar->showMessage("load_tracks_button_clicked");
-
     QModelIndex index = ui->playlists_table_view->currentIndex();
     int row = index.row();
     if (row == -1) {
         row = 0;
     }
-
     auto tracks_num = m_playlists[row]->mediaCount();
     QStringList track_paths = QFileDialog::getOpenFileNames(
             this, tr("Open files"), QString(), tr("MPEG Files (*.mp3 *.mpeg *.mpg)")
@@ -316,32 +312,70 @@ void MainWindow::on_load_tracks_button_clicked()
             qDebug() << "Error executing query:" << m_query->lastError().text();
             return;
         }
-
-        qDebug() << "RESULT " << m_query->value(0).toString();
         if (m_query->value(0).toString() == "0") {
             QFile track(track_path);
             add_track_to_playlist(track, track_path, m_current_playlist, false);
-            add_track_from_the_playlist_to_database(track_path, "All tracks");
+            add_track_and_playlist_to_database(track_path, "All tracks");
             if (m_playlists[row]->objectName() != "All tracks") {
                 add_track_to_playlist(
                         track, track_path, m_playlists[row], true
                 );
-                add_track_from_the_playlist_to_database(
+                add_track_and_playlist_to_database(
                         track_path, m_playlists[row]->objectName()
                 );
             }
         }
     }
-//    if (!m_playlists[row]->isEmpty() && tracks_num == 0) {
-//        change_the_displayed_track_information(0);
-//    }
 
     if (!m_current_playlist->isEmpty() && tracks_num==0){
         change_the_displayed_track_information(0);
         m_current_playlist->setCurrentIndex(0);
     }
+}
 
 
+void MainWindow::delete_track(int index)
+{
+    QModelIndex i = m_current_playlist_model->index(m_current_playlist->currentIndex(), 1);
+    QString str1 = m_current_playlist_model->data(i).toString();
+
+    m_current_playlist_model->removeRows(index,1);
+    m_current_playlist->removeMedia(index);
+    if (m_current_playlist->mediaCount()==0){
+        display_nodata_information();
+        return;
+    }
+
+    i = m_current_playlist_model->index(m_current_playlist->currentIndex(), 1);
+    QString str2 = m_current_playlist_model->data(i).toString();
+
+    if (str1!=str2){
+        change_the_displayed_track_information(m_current_playlist->currentIndex());
+    }
+}
+
+void MainWindow::delete_track_from_database(const QString &track_path, QString playlist_name){
+    qDebug() <<playlist_name;
+    if(playlist_name==""){
+        playlist_name = "All tracks";
+    }
+    if(playlist_name!="All tracks"){
+        m_query->prepare("DELETE FROM MusicDatabase WHERE Path = :path AND Playlist = :playlist_name");
+        m_query->bindValue(":path", track_path);
+        m_query->bindValue(":playlist", playlist_name);
+        bool b = m_query->exec();
+        if (!b) {
+            qDebug() << "Unable to delete the track from the database";
+        }
+    }
+    else{
+        m_query->prepare("DELETE FROM MusicDatabase WHERE Path = :path");
+        m_query->bindValue(":path", track_path);
+        bool b = m_query->exec();
+        if (!b) {
+            qDebug() << "Unable to delete the track from the database";
+        }
+    }
 }
 
 void MainWindow::on_next_track_button_clicked()
@@ -350,7 +384,6 @@ void MainWindow::on_next_track_button_clicked()
         m_player->setPosition(0);
     }
     else{
-        qDebug()<<"next";
         m_current_playlist->next();
     }
 }
@@ -361,7 +394,6 @@ void MainWindow::on_previous_track_button_clicked()
         m_player->setPosition(0);
     }
     else{
-        qDebug()<<"prev";
         m_current_playlist->previous();
     }
 }
@@ -431,6 +463,26 @@ void MainWindow::on_track_loop_mode_button_clicked()
     }
     else {
         m_current_playlist->setPlaybackMode(QMediaPlaylist::Loop);
+    }
+}
+
+
+void MainWindow::on_playlists_table_clicked(const QModelIndex &index) {
+    int row = index.row();
+    m_current_playlist_model->clear();
+    set_current_playlist_view();
+
+    QMediaPlaylist *playlist = new QMediaPlaylist(m_playlists[row]);
+    m_player->setPlaylist(playlist);
+
+    for (int j = 0; j < m_playlists[row]->mediaCount(); j++) {
+        QList<QStandardItem *> items;
+        form_track_item(m_playlists[row]
+                        ->media(j)
+                        .canonicalUrl()
+                        .toString(), items);
+        m_current_playlist_model->appendRow(items);
+        create_delete_button(j);
     }
 }
 
@@ -506,76 +558,6 @@ QString MainWindow::get_str_time_from_seconds(int seconds){
     str+=QString::number(seconds);
     return str;
 }
-
-void MainWindow::delete_track(int index)
-{
-    QModelIndex i = m_current_playlist_model->index(m_current_playlist->currentIndex(), 1);
-    QString str1 = m_current_playlist_model->data(i).toString();
-
-
-    m_current_playlist_model->removeRows(index,1);
-    m_current_playlist->removeMedia(index);
-    if (m_current_playlist->mediaCount()==0){
-        display_nodata_information();
-        return;
-    }
-
-    i = m_current_playlist_model->index(m_current_playlist->currentIndex(), 1);
-    QString str2 = m_current_playlist_model->data(i).toString();
-
-    if (str1!=str2){
-        change_the_displayed_track_information(m_current_playlist->currentIndex());
-    }
-}
-
-
-
-void MainWindow::on_playlists_table_clicked(const QModelIndex &index) {
-    int row = index.row();
-    qDebug() << QString::number(row) << QString::number(m_playlists.size());
-    m_current_playlist_model->clear();
-    set_current_playlist_view();
-
-    qDebug() << m_playlists[row]->objectName();
-    QMediaPlaylist *playlist = new QMediaPlaylist(m_playlists[row]);
-    m_player->setPlaylist(playlist);
-
-    for (int j = 0; j < m_playlists[row]->mediaCount(); j++) {
-        QList<QStandardItem *> items;
-        TagLib::MPEG::File mpeg_track(m_playlists[row]
-                                              ->media(j)
-                                              .canonicalUrl()
-                                              .toString()
-                                              .toStdString()
-                                              .c_str());
-        std::string track_name(mpeg_track.tag()->title().toCString(true));
-        auto artist = mpeg_track.tag()->artist().toCString(true);
-        track_name+=" - "+std::string(artist);
-        track_name=' '+track_name;
-        current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds());
-        items.append(new QStandardItem(track_name.c_str()));
-        items.append(new QStandardItem(m_playlists[row]
-                                               ->media(j)
-                                               .canonicalUrl()
-                                               .toString()));
-        items.append(new QStandardItem(current_track_duracrion));
-        items.append(new QStandardItem());
-        m_current_playlist_model->appendRow(items);
-
-        QPushButton* button = new QPushButton();
-        button->setFixedSize(50, 50);
-        button->setIcon(QIcon(":/resources/buttons/dots_vertical.png"));
-        button->setIconSize(QSize(28, 28));
-        connect(button, &QPushButton::clicked, [&] () {
-            int index = ui->tracks_table_view->currentIndex().row();
-            qDebug()<<"want ot delete row - "<<index;
-            delete_track(index);
-        });
-        ui->tracks_table_view->setIndexWidget(m_current_playlist_model->index(j,3), button);
-    }
-
-}
-
 
 void MainWindow::connect_new_shortcut_with_function(QKeySequence key, QShortcut* shortcut, const char* slot) {
     shortcut = new QShortcut(this);
