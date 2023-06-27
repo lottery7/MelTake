@@ -62,8 +62,6 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     m_visualizer = new audio_app::audio_visualizer();
     m_visualizer->set_player(m_player);
-    m_visualizer->show();
-
 
     m_database = QSqlDatabase::addDatabase("QSQLITE");
     m_database.setDatabaseName("./MusicDatabase.db");
@@ -159,6 +157,8 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
             [=](const QModelIndex &index) { on_playlists_table_clicked(index); }
     );
 
+    m_visualizer->show();
+    
 }
 
 MainWindow::~MainWindow()
