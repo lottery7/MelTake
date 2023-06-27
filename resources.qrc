@@ -12,5 +12,6 @@
         <file>resources/ghost_icon.ico</file>
         <file>resources/buttons/dots_vertical.png</file>
         <file>shaders/main.frag</file>
+        <file>resources/buttons/cross.png</file>
     </qresource>
 </RCC>
