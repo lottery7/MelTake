@@ -11,5 +11,17 @@
         <file>resources/buttons/random.png</file>
         <file>resources/ghost_icon.ico</file>
         <file>resources/buttons/dots_vertical.png</file>
+        <file>shaders/main.frag</file>
+        <file>resources/buttons/cross.png</file>
+        <file>resources/buttons/cross_clicked.png</file>
+        <file>resources/buttons/dots_vertical_clicked.png</file>
+        <file>resources/buttons/loop_clicked.png</file>
+        <file>resources/buttons/next_clicked.png</file>
+        <file>resources/buttons/pause_clicked.png</file>
+        <file>resources/buttons/play_clicked.png</file>
+        <file>resources/buttons/previous_clicked.png</file>
+        <file>resources/buttons/random_clicked.png</file>
+        <file>resources/buttons/volume_off_clicked.png</file>
+        <file>resources/buttons/volume_on_clicked.png</file>
     </qresource>
 </RCC>
