@@ -52,7 +52,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
     ui->volume_slider->setValue(stored_volume_value);
     m_current_playlist->setPlaybackMode(QMediaPlaylist::Loop);
     m_player->setNotifyInterval(25);
-    ui->track_time_lable->setText("00:00 / 00:00");
+    ui->track_time_label->setText("00:00 / 00:00");
 
     m_current_playlist->setObjectName("All tracks");
     m_playlists.append(m_current_playlist);
@@ -126,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
         m_current_playlist->setCurrentIndex(index.row());
     });
 
-    connect(m_current_playlist, &QMediaPlaylist::currentIndexChanged, ui->album_cover_lable, [this](int index){
+    connect(m_current_playlist, &QMediaPlaylist::currentIndexChanged, ui->album_cover_label, [this](int index){
         if (m_current_playlist->currentIndex()!=-1)
         {
             change_the_displayed_track_information(index);
@@ -144,9 +144,9 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     connect(ui->process_slyder, &QSlider::sliderMoved, m_player, &QMediaPlayer::setPosition);
 
-    connect(m_player, &QMediaPlayer::positionChanged, ui->track_time_lable, [this](){
+    connect(m_player, &QMediaPlayer::positionChanged, ui->track_time_label, [this](){
         QString time = get_str_time_from_seconds(m_player->position()/1000)+'/'+current_track_duracrion;
-        ui->track_time_lable->setText(time);
+        ui->track_time_label->setText(time);
     });
 
     connect(
@@ -232,7 +232,7 @@ void MainWindow::create_playlist_with_given_name(
 void MainWindow::create_delete_button(int i){
     QPushButton* button = new QPushButton();
     button->setFixedSize(50, 50);
-    button->setIcon(QIcon(":/resources/buttons/cross.png"));
+    button->setIcon(QIcon(":/resources/buttons/cross_clicked.png"));
     button->setStyleSheet("background-color: rgba(255, 255, 255, 0); padding-top: 10px;");
 
     connect(button, &QPushButton::clicked, [&] () {
@@ -252,7 +252,7 @@ void MainWindow::form_track_item(const QString &track_path, QList<QStandardItem 
     auto artist = mpeg_track.tag()->artist().toCString(true);
     track_name+=" - "+std::string(artist);
     track_name=' '+track_name;
-    current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds());
+    current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds()+3);
     items.append(new QStandardItem(track_name.c_str()));
     items.append(new QStandardItem(track_path));
     items.append(new QStandardItem(current_track_duracrion));
@@ -490,7 +490,7 @@ void MainWindow::on_playlists_table_clicked(const QModelIndex &index) {
 void MainWindow::change_the_displayed_track_information (int track_index){
 
     TagLib::MPEG::File mpeg_track (m_current_playlist_model->data(m_current_playlist_model->index(track_index, 1)).toString().toStdString().c_str());
-    current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds());
+    current_track_duracrion = get_str_time_from_seconds(mpeg_track.audioProperties()->lengthInSeconds()+3);
 
     TagLib::ID3v2::Tag* tag = mpeg_track.ID3v2Tag();
 
@@ -504,29 +504,29 @@ void MainWindow::change_the_displayed_track_information (int track_index){
                 QImage coverImage;
                 coverImage.loadFromData(reinterpret_cast<const uchar*>(cover->picture().data()), static_cast<int>(cover->picture().size()));
                 QPixmap pixmap = QPixmap::fromImage(coverImage);
-                ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
+                ui->album_cover_label->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
             }
         }
         else
         {
             QPixmap pixmap(":/resources/cover.png");
-            ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
+            ui->album_cover_label->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
         }
         if (tag->title().isEmpty()){
-            ui->track_title_lable->setText("No Title");
+            ui->track_title_label->setText("No Title");
         }
         else{
-            ui->track_title_lable->setText (tag->title().toCString(true));
+            ui->track_title_label->setText (tag->title().toCString(true));
         }
         if (tag->artist().isEmpty()){
-            ui->track_artist_album_lable->setText("No Artist");
+            ui->track_artist_album_label->setText("No Artist");
         }
         else{
             std::string track_artist_album (tag->artist().toCString(true));
             auto album = tag -> album().toCString(true);
             if (std::string (album) != ""){
                 track_artist_album += " - " + std::string (album);
-                ui->track_artist_album_lable->setText (track_artist_album.c_str());
+                ui->track_artist_album_label->setText (track_artist_album.c_str());
             }
         }
         return;
@@ -535,15 +535,14 @@ void MainWindow::change_the_displayed_track_information (int track_index){
 }
 
 void MainWindow::display_nodata_information (){
-    ui->track_title_lable->setText("No Title");
-    ui->track_artist_album_lable->setText("No Artist");
+    ui->track_title_label->setText("No Title");
+    ui->track_artist_album_label->setText("No Artist");
     QPixmap pixmap(":/resources/cover.png");
-    ui->album_cover_lable->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
+    ui->album_cover_label->setPixmap(pixmap.scaled(300,300,Qt::KeepAspectRatio));
 }
 
 QString MainWindow::get_str_time_from_seconds(int seconds){
     QString str;
-    seconds+=6;
     int hours = seconds / 3600;
     seconds %= 3600;
     int minutes = seconds / 60;
