@@ -625,7 +625,7 @@ QSlider::sub-page:horizontal {
        </layout>
       </item>
       <item>
-       <widget class="QTableView" name="tracks_table_view">
+       <widget class="QTableView" name="tracks_tabel_view">
         <property name="tabletTracking">
          <bool>false</bool>
         </property>
@@ -713,7 +713,7 @@ QSlider::sub-page:horizontal {
          <enum>QLayout::SetMaximumSize</enum>
         </property>
         <item>
-         <widget class="QPushButton" name="add_playlist_button">
+         <widget class="QPushButton" name="add_playlist">
           <property name="styleSheet">
            <string notr="true">QPushButton{
 	color: rgb(45,75,55);
