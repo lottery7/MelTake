@@ -24,7 +24,7 @@
 	make
 	```
 # Вид приложения
-
+![audio_app_qHq0L1kvkk](https://github.com/B-E-D-A/audio-app-MelTake/assets/52651781/0ba50155-c0d1-4b62-9f70-683440b77398)
  ![image](https://github.com/B-E-D-A/audio-app-MelTake/assets/112130616/49c3dd5d-c366-402b-9c7c-544f5561094d) 
  ![image](https://github.com/B-E-D-A/audio-app-MelTake/assets/112130616/d827d023-f691-4508-8539-83600a85d687) 
 
